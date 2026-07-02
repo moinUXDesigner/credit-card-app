@@ -24,6 +24,7 @@ class CardResource extends JsonResource
             'last_four_digits' => $this->last_four_digits,
             'network' => $this->network,
             'total_limit' => (float) $this->total_limit,
+            'shared_limit_group' => $this->shared_limit_group,
             'current_outstanding' => (float) $this->current_outstanding,
             'statement_day' => $this->statement_day,
             'due_day' => $this->due_day,

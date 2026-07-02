@@ -52,6 +52,23 @@ services:
     networks:
       - ccapp-net
 
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: ccapp-phpmyadmin
+    restart: unless-stopped
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=${DB_USERNAME:-ccapp}
+      - PMA_PASSWORD=${DB_PASSWORD:-secret}
+    ports:
+      - "${PMA_PORT:-8081}:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - ccapp-net
+
 volumes:
   ccapp-mysql-data:
 

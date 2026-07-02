@@ -17,6 +17,12 @@ export default function CardListItem({ card, onDelete }) {
             {card.bank_name} · Limit ₹{card.total_limit.toLocaleString('en-IN')} · Outstanding ₹
             {card.current_outstanding.toLocaleString('en-IN')}
           </p>
+          {card.shared_limit_group && (
+            <p className="mt-1 text-xs text-gray-500">
+              Shares limit with other cards in group "{card.shared_limit_group}" — utilization below reflects the
+              combined balance.
+            </p>
+          )}
         </div>
         <div className="flex gap-3 text-sm">
           <Link to={`/cards/${card.id}/edit`} className="text-indigo-600 hover:underline">

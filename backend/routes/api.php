@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BenefitController;
 use App\Http\Controllers\Api\CardController;
+use App\Http\Controllers\Api\CardImportController;
 use App\Http\Controllers\Api\ComparisonController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MonthlySpendEntryController;
@@ -22,6 +23,7 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:api')->group(function () {
+    Route::post('cards/import', [CardImportController::class, 'store']);
     Route::apiResource('cards', CardController::class);
     Route::apiResource('cards.benefits', BenefitController::class)->shallow();
     Route::post('benefits/{benefit}/mark-used', [BenefitController::class, 'markUsed']);

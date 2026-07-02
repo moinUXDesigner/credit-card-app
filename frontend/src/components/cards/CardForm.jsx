@@ -8,6 +8,7 @@ const DEFAULTS = {
   last_four_digits: '',
   network: 'visa',
   total_limit: '',
+  shared_limit_group: '',
   current_outstanding: '0',
   statement_day: '1',
   due_day: '15',
@@ -70,6 +71,19 @@ export default function CardForm({ initialValues, onSubmit, submitLabel = 'Save'
           <label className={labelClass}>Total limit (₹)</label>
           <input type="number" step="0.01" {...register('total_limit')} className={fieldClass} />
           {errors.total_limit && <p className={errorClass}>{errors.total_limit.message}</p>}
+        </div>
+        <div>
+          <label className={labelClass}>Shared limit group (optional)</label>
+          <input
+            {...register('shared_limit_group')}
+            placeholder="e.g. hdfc-combined"
+            className={fieldClass}
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Set the same value on every card that pools one combined limit with this bank (e.g. two HDFC cards
+            sharing one credit line). Total limit must match across all cards in the group.
+          </p>
+          {errors.shared_limit_group && <p className={errorClass}>{errors.shared_limit_group.message}</p>}
         </div>
         <div>
           <label className={labelClass}>Current outstanding (₹)</label>

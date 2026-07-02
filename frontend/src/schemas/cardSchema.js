@@ -14,6 +14,10 @@ export const cardSchema = z.object({
   last_four_digits: z.string().regex(/^\d{4}$/, 'Must be exactly 4 digits'),
   network: z.enum(NETWORKS),
   total_limit: z.coerce.number().min(0),
+  shared_limit_group: z.preprocess(
+    (val) => (val === '' || val === undefined ? null : val),
+    z.string().max(100).nullable().optional(),
+  ),
   current_outstanding: z.coerce.number().min(0),
   statement_day: z.coerce.number().int().min(1).max(31),
   due_day: z.coerce.number().int().min(1).max(31),

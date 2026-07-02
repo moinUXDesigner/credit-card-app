@@ -30,7 +30,7 @@ docker compose exec app composer install   # first time only
 docker compose exec app php artisan migrate
 ```
 
-The API is reachable at `http://localhost:8080/api`.
+The API is reachable at `http://localhost:8080/api`. phpMyAdmin is reachable at `http://localhost:8081` (login with the `DB_USERNAME`/`DB_PASSWORD` from `.env`).
 
 ### 2. Frontend (local Vite dev server)
 

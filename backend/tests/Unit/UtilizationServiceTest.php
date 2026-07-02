@@ -55,6 +55,19 @@ class UtilizationServiceTest extends TestCase
         $this->assertEqualsWithDelta(0.0, $this->service->overallUtilization($cards), 0.001);
     }
 
+    public function test_overall_utilization_counts_shared_limit_group_once(): void
+    {
+        // Two cards from the same bank pooling one 100000 limit: outstanding
+        // 30000 + 20000 = 50000 against a single 100000 limit, not 200000.
+        $shared = ['total_limit' => 100000, 'shared_limit_group' => 'hdfc-combined'];
+        $cards = new Collection([
+            new Card($shared + ['current_outstanding' => 30000]),
+            new Card($shared + ['current_outstanding' => 20000]),
+        ]);
+
+        $this->assertEqualsWithDelta(50.0, $this->service->overallUtilization($cards), 0.01);
+    }
+
     #[DataProvider('bandBoundaryProvider')]
     public function test_band_boundaries(float $utilizationPct, string $expectedBand): void
     {

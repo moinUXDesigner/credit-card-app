@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Card extends Model
 {
@@ -28,6 +29,7 @@ class Card extends Model
         'last_four_digits',
         'network',
         'total_limit',
+        'shared_limit_group',
         'current_outstanding',
         'statement_day',
         'due_day',
@@ -76,5 +78,22 @@ class Card extends Model
     public function spendEntries(): HasMany
     {
         return $this->hasMany(MonthlySpendEntry::class);
+    }
+
+    /**
+     * Cards (including this one) that pool their credit limit together —
+     * i.e. share the same non-null `shared_limit_group` for this user.
+     * Falls back to a single-card collection when this card has no group.
+     */
+    public function limitGroupCards(): Collection
+    {
+        if (! $this->shared_limit_group) {
+            return new Collection([$this]);
+        }
+
+        return static::query()
+            ->where('user_id', $this->user_id)
+            ->where('shared_limit_group', $this->shared_limit_group)
+            ->get();
     }
 }

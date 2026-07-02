@@ -6,6 +6,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import MyCards from './pages/MyCards'
 import CardFormPage from './pages/CardFormPage'
+import CardImportPage from './pages/CardImportPage'
 import Recommendation from './pages/Recommendation'
 import Benefits from './pages/Benefits'
 import CalendarPage from './pages/CalendarPage'
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
           { path: '/', element: <Dashboard /> },
           { path: '/cards', element: <MyCards /> },
           { path: '/cards/new', element: <CardFormPage /> },
+          { path: '/cards/import', element: <CardImportPage /> },
           { path: '/cards/:id/edit', element: <CardFormPage /> },
           { path: '/recommendation', element: <Recommendation /> },
           { path: '/benefits', element: <Benefits /> },
