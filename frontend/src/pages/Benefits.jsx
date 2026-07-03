@@ -4,6 +4,8 @@ import { useBenefits } from '../hooks/useBenefits'
 import { createBenefit, deleteBenefit, markBenefitUsed } from '../api/benefits'
 import BenefitForm from '../components/benefits/BenefitForm'
 import BenefitListItem from '../components/benefits/BenefitListItem'
+import BenefitListItemSkeleton from '../components/benefits/BenefitListItemSkeleton'
+import Skeleton from '../components/common/Skeleton'
 
 export default function Benefits() {
   const { cards, loading: cardsLoading } = useCards()
@@ -29,7 +31,24 @@ export default function Benefits() {
     refresh()
   }
 
-  if (cardsLoading) return <p className="text-sm text-gray-500">Loading…</p>
+  if (cardsLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-semibold text-gray-900">Benefits</h1>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-40" />
+            <Skeleton className="h-9 w-28" />
+          </div>
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <BenefitListItemSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    )
+  }
   if (cards.length === 0) {
     return <p className="text-sm text-gray-500">Add a card first to start tracking its benefits.</p>
   }

@@ -1,6 +1,50 @@
 import { useEffect, useState } from 'react'
 import { getDashboard } from '../api/dashboard'
 import UtilizationBar from '../components/cards/UtilizationBar'
+import Skeleton from '../components/common/Skeleton'
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-6 w-32" />
+
+      <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="mt-3 h-3 w-full rounded-full" />
+      </div>
+
+      <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <Skeleton className="h-4 w-56" />
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex justify-between border-b py-2 last:border-0">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <Skeleton className="h-4 w-32" />
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="flex justify-between border-b py-2 last:border-0">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <Skeleton className="h-4 w-32" />
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="flex justify-between border-b py-2 last:border-0">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function Dashboard() {
   const [data, setData] = useState(null)
@@ -12,7 +56,7 @@ export default function Dashboard() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <p className="text-sm text-gray-500">Loading…</p>
+  if (loading) return <DashboardSkeleton />
   if (!data) return null
 
   return (

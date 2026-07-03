@@ -9,12 +9,14 @@ export default function CardListItem({ card, onDelete }) {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-900">{card.card_name}</span>
+            <span className="font-medium text-gray-900">
+              {card.bank_name} {card.card_name}
+            </span>
             <Badge color="indigo">{card.network}</Badge>
             <span className="text-sm text-gray-500">•••• {card.last_four_digits}</span>
           </div>
           <p className="mt-1 text-sm text-gray-600">
-            {card.bank_name} · Limit ₹{card.total_limit.toLocaleString('en-IN')} · Outstanding ₹
+            Limit ₹{card.total_limit.toLocaleString('en-IN')} · Outstanding ₹
             {card.current_outstanding.toLocaleString('en-IN')}
           </p>
           {card.shared_limit_group && (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useCards } from '../hooks/useCards'
 import { getMonthlyReport, logMonthlySpend } from '../api/reports'
+import Skeleton from '../components/common/Skeleton'
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -40,6 +41,44 @@ function LogSpendRow({ card, year, month, onSaved }) {
         >
           Save
         </button>
+      </div>
+    </div>
+  )
+}
+
+function ReportSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="mt-2 h-8 w-32" />
+        <Skeleton className="mt-2 h-4 w-48" />
+        <Skeleton className="mt-2 h-4 w-56" />
+      </div>
+
+      <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <Skeleton className="h-4 w-32" />
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="flex justify-between py-1">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-4 w-12" />
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <Skeleton className="h-4 w-32" />
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="flex justify-between py-1">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="mt-2 h-4 w-20" />
       </div>
     </div>
   )
@@ -93,7 +132,7 @@ export default function Reports() {
         ))}
       </div>
 
-      {loading && <p className="text-sm text-gray-500">Loading…</p>}
+      {loading && <ReportSkeleton />}
 
       {!loading && report && (
         <div className="space-y-4">

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getRecommendation } from '../api/recommendations'
 import { CATEGORIES } from '../schemas/cardSchema'
 import ScoreCard from '../components/recommendation/ScoreCard'
+import ScoreCardSkeleton from '../components/recommendation/ScoreCardSkeleton'
 
 export default function Recommendation() {
   const [category, setCategory] = useState('')
@@ -29,16 +30,23 @@ export default function Recommendation() {
         </select>
       </div>
 
-      {loading && <p className="text-sm text-gray-500">Loading…</p>}
       {!loading && results.length === 0 && (
         <p className="text-sm text-gray-500">Add an active card to get a recommendation.</p>
       )}
 
-      <div className="space-y-3">
-        {results.map((result, i) => (
-          <ScoreCard key={result.card_id} rank={i + 1} result={result} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <ScoreCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {results.map((result, i) => (
+            <ScoreCard key={result.card_id} rank={i + 1} result={result} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

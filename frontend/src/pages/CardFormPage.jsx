@@ -2,6 +2,23 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import CardForm from '../components/cards/CardForm'
 import { createCard, getCard, updateCard } from '../api/cards'
+import Skeleton from '../components/common/Skeleton'
+
+function CardFormSkeleton() {
+  return (
+    <div className="space-y-6 rounded-lg border bg-white p-6 shadow-sm">
+      <div className="grid grid-cols-2 gap-4">
+        {Array.from({ length: 16 }).map((_, i) => (
+          <div key={i}>
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="mt-1 h-9 w-full" />
+          </div>
+        ))}
+      </div>
+      <Skeleton className="h-9 w-32" />
+    </div>
+  )
+}
 
 export default function CardFormPage() {
   const { id } = useParams()
@@ -42,7 +59,14 @@ export default function CardFormPage() {
     }
   }
 
-  if (isEdit && !initialValues) return <p className="text-sm text-gray-500">Loading…</p>
+  if (isEdit && !initialValues) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-lg font-semibold text-gray-900">Edit Card</h1>
+        <CardFormSkeleton />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
