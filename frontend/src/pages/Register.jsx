@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { register } from '../api/auth'
 import { useAuthStore } from '../store/authStore'
+import PasswordInput from '../components/common/PasswordInput'
 
 export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '', password_confirmation: '' })
@@ -42,13 +43,17 @@ export default function Register() {
         ].map(({ key, label, type }) => (
           <div key={key}>
             <label className="block text-sm font-medium text-gray-700">{label}</label>
-            <input
-              type={type}
-              required
-              value={form[key]}
-              onChange={update(key)}
-              className="mt-1 w-full rounded border px-3 py-2"
-            />
+            {type === 'password' ? (
+              <PasswordInput required value={form[key]} onChange={update(key)} className="mt-1" />
+            ) : (
+              <input
+                type={type}
+                required
+                value={form[key]}
+                onChange={update(key)}
+                className="mt-1 w-full rounded border px-3 py-2"
+              />
+            )}
             {fieldError(key) && <p className="mt-1 text-xs text-red-600">{fieldError(key)}</p>}
           </div>
         ))}
