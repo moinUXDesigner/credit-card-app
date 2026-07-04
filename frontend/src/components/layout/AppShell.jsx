@@ -1,6 +1,9 @@
+import { useRef, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { logout as logoutApi } from '../../api/auth'
+import FullscreenLottieOverlay from '../common/FullscreenLottieOverlay'
+import logoutAnimation from '../../assets/lottie/logout.json'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard' },
@@ -16,19 +19,30 @@ export default function AppShell() {
   const user = useAuthStore((s) => s.user)
   const clearAuth = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
+  const [loggingOut, setLoggingOut] = useState(false)
+  const finishedRef = useRef(false)
 
-  const handleLogout = async () => {
-    try {
-      await logoutApi()
-    } catch {
-      // ignore — we clear local state regardless
-    }
+  const finishLogout = () => {
+    if (finishedRef.current) return
+    finishedRef.current = true
     clearAuth()
     navigate('/login')
   }
 
+  const handleLogout = () => {
+    setLoggingOut(true)
+    logoutApi().catch(() => {
+      // ignore — we clear local state regardless
+    })
+    // Fallback in case the animation's onComplete never fires.
+    setTimeout(finishLogout, 3000)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {loggingOut && (
+        <FullscreenLottieOverlay animationData={logoutAnimation} message="Signing you out…" onComplete={finishLogout} />
+      )}
       <header className="border-b bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <span className="font-semibold text-gray-900">Credit Card Usage Optimizer</span>

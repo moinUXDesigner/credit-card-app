@@ -1,16 +1,26 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { login } from '../api/auth'
 import { useAuthStore } from '../store/authStore'
 import PasswordInput from '../components/common/PasswordInput'
+import FullscreenLottieOverlay from '../components/common/FullscreenLottieOverlay'
+import loginAnimation from '../assets/lottie/login.json'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(false)
   const setAuth = useAuthStore((s) => s.setAuth)
   const navigate = useNavigate()
+  const finishedRef = useRef(false)
+
+  const finishLogin = () => {
+    if (finishedRef.current) return
+    finishedRef.current = true
+    navigate('/')
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -19,12 +29,17 @@ export default function Login() {
     try {
       const data = await login({ email, password })
       setAuth(data.access_token, data.user)
-      navigate('/')
+      setLoggedIn(true)
+      // Fallback in case the animation's onComplete never fires.
+      setTimeout(finishLogin, 3000)
     } catch (err) {
       setError(err.response?.data?.message ?? 'Login failed.')
-    } finally {
       setLoading(false)
     }
+  }
+
+  if (loggedIn) {
+    return <FullscreenLottieOverlay animationData={loginAnimation} message="Welcome back!" onComplete={finishLogin} />
   }
 
   return (
