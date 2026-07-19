@@ -22,6 +22,9 @@ const DEFAULTS = {
   best_categories: [],
   reward_rate_general: '',
   cashback_cap_amount: '',
+  forex_markup_percent: '',
+  fuel_surcharge_waiver_percent: '',
+  insurance_cover_amount: '',
   lounge_access: false,
 }
 
@@ -134,6 +137,22 @@ export default function CardForm({ initialValues, onSubmit, submitLabel = 'Save'
         <div>
           <label className={labelClass}>Reward point value (₹/point)</label>
           <input type="number" step="0.0001" {...register('reward_point_value_estimate')} className={fieldClass} />
+        </div>
+        <div>
+          <label className={labelClass}>Forex markup (%)</label>
+          <input type="number" step="0.01" {...register('forex_markup_percent')} className={fieldClass} />
+          {errors.forex_markup_percent && <p className={errorClass}>{errors.forex_markup_percent.message}</p>}
+        </div>
+        <div>
+          <label className={labelClass}>Fuel surcharge waiver (%)</label>
+          <input type="number" step="0.01" {...register('fuel_surcharge_waiver_percent')} className={fieldClass} />
+          {errors.fuel_surcharge_waiver_percent && (
+            <p className={errorClass}>{errors.fuel_surcharge_waiver_percent.message}</p>
+          )}
+        </div>
+        <div>
+          <label className={labelClass}>Insurance cover amount (₹)</label>
+          <input type="number" step="0.01" {...register('insurance_cover_amount')} className={fieldClass} />
         </div>
       </div>
 

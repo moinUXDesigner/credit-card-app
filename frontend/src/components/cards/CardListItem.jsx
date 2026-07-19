@@ -7,7 +7,7 @@ export default function CardListItem({ card, onDelete }) {
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
-        <div>
+        <Link to={`/cards/${card.id}`} className="block hover:opacity-80">
           <div className="flex items-center gap-2">
             <span className="font-medium text-gray-900">
               {card.bank_name} {card.card_name}
@@ -25,7 +25,7 @@ export default function CardListItem({ card, onDelete }) {
               combined balance.
             </p>
           )}
-        </div>
+        </Link>
         <div className="flex gap-3 text-sm">
           <Link to={`/cards/${card.id}/edit`} className="text-indigo-600 hover:underline">
             Edit

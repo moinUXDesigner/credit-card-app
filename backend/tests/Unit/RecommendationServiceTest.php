@@ -172,4 +172,49 @@ class RecommendationServiceTest extends TestCase
         $this->assertSame(2, $ranked[0]['card_id']);
         $this->assertSame(1, $ranked[1]['card_id']);
     }
+
+    public function test_multi_category_score_takes_best_match_not_sum(): void
+    {
+        $now = Carbon::create(2026, 6, 15);
+        $card = $this->cardWith(['best_categories' => ['grocery'], 'due_day' => 25]);
+
+        $result = $this->service->scoreCard($card, ['fuel', 'grocery', 'medicines'], $now);
+
+        // matches only 'grocery' among the three -> best match score (30), not a sum across categories.
+        $this->assertSame(30.0, $result['breakdown']['reward_category_score']);
+    }
+
+    public function test_multi_category_score_falls_back_to_general_rate_when_none_match(): void
+    {
+        $now = Carbon::create(2026, 6, 15);
+        $card = $this->cardWith(['best_categories' => ['travel'], 'reward_rate_general' => 2, 'due_day' => 25]);
+
+        $result = $this->service->scoreCard($card, ['fuel', 'online_food'], $now);
+
+        $this->assertSame(6.0, $result['breakdown']['reward_category_score']);
+    }
+
+    public function test_monthly_plan_returns_top_n_cards_blending_waiver_and_categories(): void
+    {
+        $now = Carbon::create(2026, 6, 15);
+
+        $waiverUrgent = $this->cardWith([
+            'id' => 1, 'due_day' => 28,
+            'waiver_spend_required' => 100000, 'waiver_spend_completed' => 0, 'card_year_start_month' => 7,
+        ]);
+        $categoryMatch = $this->cardWith(['id' => 2, 'due_day' => 28, 'best_categories' => ['grocery']]);
+        $irrelevant = $this->cardWith(['id' => 3, 'due_day' => 28]);
+
+        $plan = $this->service->monthlyPlan(
+            new Collection([$irrelevant, $waiverUrgent, $categoryMatch]),
+            ['grocery', 'medicines'],
+            $now,
+            2
+        );
+
+        $this->assertCount(2, $plan);
+        $planIds = array_column($plan, 'card_id');
+        $this->assertContains(2, $planIds);
+        $this->assertNotContains(3, $planIds);
+    }
 }

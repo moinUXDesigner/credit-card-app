@@ -19,4 +19,14 @@ class RecommendationController extends Controller
 
         return response()->json($this->recommendationService->recommend($cards, $category));
     }
+
+    public function monthlyPlan(Request $request): JsonResponse
+    {
+        $cards = $request->user()->cards()->with('benefits')->where('is_active', true)->get();
+
+        $categories = array_values(array_filter((array) $request->query('categories', [])));
+        $topN = (int) $request->query('top_n', 2);
+
+        return response()->json($this->recommendationService->monthlyPlan($cards, $categories, null, $topN));
+    }
 }

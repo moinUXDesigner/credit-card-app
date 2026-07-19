@@ -46,6 +46,61 @@ class CardCrudTest extends TestCase
         $this->assertDatabaseHas('cards', ['card_name' => 'Regalia', 'user_id' => $user->id]);
     }
 
+    public function test_user_can_create_card_with_benefit_detail_fields(): void
+    {
+        $user = User::factory()->create();
+
+        $payload = [
+            'card_name' => 'Regalia',
+            'bank_name' => 'HDFC',
+            'last_four_digits' => '1234',
+            'network' => 'visa',
+            'total_limit' => 200000,
+            'current_outstanding' => 35000,
+            'statement_day' => 5,
+            'due_day' => 25,
+            'annual_fee_amount' => 2500,
+            'annual_fee_month' => 9,
+            'waiver_spend_required' => 300000,
+            'waiver_spend_completed' => 210000,
+            'card_year_start_month' => 9,
+            'forex_markup_percent' => 3.5,
+            'fuel_surcharge_waiver_percent' => 1,
+            'insurance_cover_amount' => 500000,
+        ];
+
+        $this->postJson('/api/cards', $payload, $this->authHeaders($user))
+            ->assertStatus(201)
+            ->assertJsonPath('forex_markup_percent', 3.5)
+            ->assertJsonPath('fuel_surcharge_waiver_percent', 1)
+            ->assertJsonPath('insurance_cover_amount', 500000);
+    }
+
+    public function test_create_card_rejects_forex_markup_percent_over_100(): void
+    {
+        $user = User::factory()->create();
+
+        $payload = [
+            'card_name' => 'Regalia',
+            'bank_name' => 'HDFC',
+            'last_four_digits' => '1234',
+            'network' => 'visa',
+            'total_limit' => 200000,
+            'current_outstanding' => 0,
+            'statement_day' => 5,
+            'due_day' => 25,
+            'annual_fee_amount' => 2500,
+            'annual_fee_month' => 9,
+            'waiver_spend_required' => 300000,
+            'card_year_start_month' => 9,
+            'forex_markup_percent' => 150,
+        ];
+
+        $this->postJson('/api/cards', $payload, $this->authHeaders($user))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['forex_markup_percent']);
+    }
+
     public function test_create_card_validates_required_fields(): void
     {
         $user = User::factory()->create();

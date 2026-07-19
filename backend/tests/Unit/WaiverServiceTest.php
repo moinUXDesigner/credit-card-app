@@ -119,4 +119,36 @@ class WaiverServiceTest extends TestCase
 
         $this->assertGreaterThan($farScore, $nearScore);
     }
+
+    public function test_cycle_start_is_this_years_anniversary_when_already_passed(): void
+    {
+        $card = $this->cardWith(['card_year_start_month' => 3]);
+        $now = Carbon::create(2026, 6, 15);
+
+        $this->assertTrue($this->service->cycleStart($card, $now)->isSameDay(Carbon::create(2026, 3, 1)));
+    }
+
+    public function test_cycle_start_falls_back_to_last_years_anniversary_when_upcoming(): void
+    {
+        $card = $this->cardWith(['card_year_start_month' => 9]);
+        $now = Carbon::create(2026, 6, 15);
+
+        $this->assertTrue($this->service->cycleStart($card, $now)->isSameDay(Carbon::create(2025, 9, 1)));
+    }
+
+    public function test_sum_entries_in_current_cycle_includes_only_entries_within_the_12_month_window(): void
+    {
+        $card = $this->cardWith(['card_year_start_month' => 9]);
+        $now = Carbon::create(2026, 6, 15); // cycle: Sep 2025 - Aug 2026
+
+        $entries = [
+            (object) ['year' => 2025, 'month' => 8, 'amount_spent' => 99000], // before cycle
+            (object) ['year' => 2025, 'month' => 9, 'amount_spent' => 10000], // cycle start
+            (object) ['year' => 2026, 'month' => 6, 'amount_spent' => 20000], // within cycle
+            (object) ['year' => 2026, 'month' => 8, 'amount_spent' => 5000],  // cycle end
+            (object) ['year' => 2026, 'month' => 9, 'amount_spent' => 77000], // next cycle
+        ];
+
+        $this->assertEqualsWithDelta(35000.0, $this->service->sumEntriesInCurrentCycle($card, $entries, $now), 0.001);
+    }
 }

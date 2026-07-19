@@ -13,7 +13,7 @@ class RecommendationService
         private WaiverService $waiverService,
     ) {}
 
-    public function scoreCard(Card $card, ?string $category = null, ?Carbon $now = null): array
+    public function scoreCard(Card $card, string|array|null $category = null, ?Carbon $now = null): array
     {
         $waiverUrgency = $this->waiverService->urgencyScore($card, $now);
         $rewardCategoryScore = $this->rewardCategoryScore($card, $category);
@@ -40,18 +40,26 @@ class RecommendationService
         ];
     }
 
-    private function rewardCategoryScore(Card $card, ?string $category): float
+    /**
+     * When given multiple categories (e.g. this month's target spend areas),
+     * a card is scored by its single best-matching category rather than the
+     * sum, since covering one target category well already makes a card
+     * worth using — it doesn't need to match all of them.
+     */
+    private function rewardCategoryScore(Card $card, string|array|null $category): float
     {
-        if (! $category) {
+        $categories = array_filter((array) $category);
+        if ($categories === []) {
             return 0.0;
         }
 
         $best = $card->best_categories ?? [];
-        if (in_array($category, $best, true)) {
-            return 30.0;
-        }
+        $generalScore = min(15.0, (float) ($card->reward_rate_general ?? 0) * 3);
 
-        return min(15.0, (float) ($card->reward_rate_general ?? 0) * 3);
+        return max(array_map(
+            fn (string $cat) => in_array($cat, $best, true) ? 30.0 : $generalScore,
+            $categories,
+        ));
     }
 
     private function unusedBenefitScore(Card $card, ?Carbon $now = null): float
@@ -112,11 +120,20 @@ class RecommendationService
         return $now->diffInDays($target);
     }
 
-    public function recommend(Collection $cards, ?string $category = null, ?Carbon $now = null): array
+    public function recommend(Collection $cards, string|array|null $category = null, ?Carbon $now = null): array
     {
         return $cards->map(fn (Card $card) => $this->scoreCard($card, $category, $now))
             ->sortByDesc('total_score')
             ->values()
             ->toArray();
+    }
+
+    /**
+     * Top N cards to prioritize spend on this month, blending waiver urgency
+     * with reward-category fit across the given target categories.
+     */
+    public function monthlyPlan(Collection $cards, array $categories, ?Carbon $now = null, int $topN = 2): array
+    {
+        return array_slice($this->recommend($cards, $categories, $now), 0, $topN);
     }
 }

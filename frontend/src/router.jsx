@@ -7,11 +7,13 @@ import Dashboard from './pages/Dashboard'
 import MyCards from './pages/MyCards'
 import CardFormPage from './pages/CardFormPage'
 import CardImportPage from './pages/CardImportPage'
+import CardDetailPage from './pages/CardDetailPage'
 import Recommendation from './pages/Recommendation'
 import Benefits from './pages/Benefits'
 import CalendarPage from './pages/CalendarPage'
 import Reports from './pages/Reports'
 import Comparison from './pages/Comparison'
+import SpendAnalyzer from './pages/SpendAnalyzer'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
@@ -27,11 +29,13 @@ export const router = createBrowserRouter([
           { path: '/cards/new', element: <CardFormPage /> },
           { path: '/cards/import', element: <CardImportPage /> },
           { path: '/cards/:id/edit', element: <CardFormPage /> },
+          { path: '/cards/:id', element: <CardDetailPage /> },
           { path: '/recommendation', element: <Recommendation /> },
           { path: '/benefits', element: <Benefits /> },
           { path: '/calendar', element: <CalendarPage /> },
           { path: '/reports', element: <Reports /> },
           { path: '/comparison', element: <Comparison /> },
+          { path: '/spend-analyzer', element: <SpendAnalyzer /> },
         ],
       },
     ],

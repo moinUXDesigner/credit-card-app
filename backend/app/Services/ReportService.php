@@ -21,10 +21,10 @@ class ReportService
             }])
             ->get();
 
-        $totalSpend = $cards->sum(fn ($card) => (float) ($card->spendEntries->first()?->amount_spent ?? 0));
+        $totalSpend = $cards->sum(fn ($card) => (float) $card->spendEntries->sum('amount_spent'));
 
-        $bestCard = $cards->sortByDesc(fn ($card) => (float) ($card->spendEntries->first()?->amount_spent ?? 0))->first();
-        $bestCardUsed = $bestCard && ($bestCard->spendEntries->first()?->amount_spent ?? 0) > 0
+        $bestCard = $cards->sortByDesc(fn ($card) => (float) $card->spendEntries->sum('amount_spent'))->first();
+        $bestCardUsed = $bestCard && (float) $bestCard->spendEntries->sum('amount_spent') > 0
             ? ['id' => $bestCard->id, 'card_name' => $bestCard->card_name]
             : null;
 

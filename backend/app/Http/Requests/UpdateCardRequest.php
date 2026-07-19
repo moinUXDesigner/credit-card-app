@@ -34,9 +34,12 @@ class UpdateCardRequest extends FormRequest
             'reward_point_balance' => ['nullable', 'numeric', 'min:0'],
             'reward_point_value_estimate' => ['nullable', 'numeric', 'min:0'],
             'best_categories' => ['nullable', 'array'],
-            'best_categories.*' => ['string', Rule::in(['fuel', 'grocery', 'amazon', 'dining', 'travel', 'utilities', 'online', 'other'])],
+            'best_categories.*' => ['string', Rule::in(Card::CATEGORIES)],
             'reward_rate_general' => ['nullable', 'numeric', 'min:0'],
             'cashback_cap_amount' => ['nullable', 'numeric', 'min:0'],
+            'forex_markup_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'fuel_surcharge_waiver_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'insurance_cover_amount' => ['nullable', 'numeric', 'min:0'],
             'lounge_access' => ['boolean'],
             'is_active' => ['boolean'],
         ];

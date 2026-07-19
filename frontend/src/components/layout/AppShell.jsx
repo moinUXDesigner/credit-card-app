@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { to: '/calendar', label: 'Calendar' },
   { to: '/reports', label: 'Reports' },
   { to: '/comparison', label: 'Comparison' },
+  { to: '/spend-analyzer', label: 'Spend Analyzer' },
 ]
 
 export default function AppShell() {

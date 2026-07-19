@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Card;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreMonthlySpendEntryRequest extends FormRequest
 {
@@ -17,7 +19,7 @@ class StoreMonthlySpendEntryRequest extends FormRequest
             'year' => ['required', 'integer', 'between:2000,2100'],
             'month' => ['required', 'integer', 'between:1,12'],
             'amount_spent' => ['required', 'numeric', 'min:0'],
-            'category' => ['nullable', 'string', 'max:50'],
+            'category' => ['nullable', 'string', Rule::in(Card::CATEGORIES)],
         ];
     }
 }

@@ -49,6 +49,46 @@ class WaiverService
     }
 
     /**
+     * Start of the card's current fee-year cycle (the most recent occurrence
+     * of card_year_start_month at or before now).
+     */
+    public function cycleStart(Card $card, ?Carbon $now = null): Carbon
+    {
+        $now ??= Carbon::now();
+
+        $cycleStart = Carbon::create($now->year, $card->card_year_start_month, 1);
+        if ($cycleStart->greaterThan($now->copy()->startOfMonth())) {
+            $cycleStart->subYear();
+        }
+
+        return $cycleStart;
+    }
+
+    /**
+     * Sums amount_spent across MonthlySpendEntry-like items (objects with
+     * `year`/`month`/`amount_spent`) that fall within the card's current
+     * 12-month fee-year cycle.
+     */
+    public function sumEntriesInCurrentCycle(Card $card, iterable $entries, ?Carbon $now = null): float
+    {
+        $cycleStart = $this->cycleStart($card, $now);
+        $cycleEnd = $cycleStart->copy()->addMonths(11);
+
+        $startKey = $cycleStart->year * 12 + $cycleStart->month;
+        $endKey = $cycleEnd->year * 12 + $cycleEnd->month;
+
+        $total = 0.0;
+        foreach ($entries as $entry) {
+            $key = $entry->year * 12 + $entry->month;
+            if ($key >= $startKey && $key <= $endKey) {
+                $total += (float) $entry->amount_spent;
+            }
+        }
+
+        return round($total, 2);
+    }
+
+    /**
      * Urgency score 0-100 for the recommendation engine: higher means
      * more urgent to spend on this card to hit the waiver target in time.
      */

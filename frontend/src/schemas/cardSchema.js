@@ -1,11 +1,18 @@
 import { z } from 'zod'
 
 export const NETWORKS = ['visa', 'mastercard', 'rupay', 'amex']
-export const CATEGORIES = ['fuel', 'grocery', 'amazon', 'dining', 'travel', 'utilities', 'online', 'other']
+export const CATEGORIES = [
+  'fuel', 'grocery', 'amazon', 'dining', 'travel', 'utilities', 'online', 'medicines', 'online_food', 'other',
+]
 
 const optionalNullableNumber = z.preprocess(
   (val) => (val === '' || val === undefined ? null : val),
   z.coerce.number().min(0).nullable().optional(),
+)
+
+const optionalNullablePercent = z.preprocess(
+  (val) => (val === '' || val === undefined ? null : val),
+  z.coerce.number().min(0).max(100).nullable().optional(),
 )
 
 export const cardSchema = z.object({
@@ -31,5 +38,8 @@ export const cardSchema = z.object({
   best_categories: z.array(z.enum(CATEGORIES)).optional(),
   reward_rate_general: optionalNullableNumber,
   cashback_cap_amount: optionalNullableNumber,
+  forex_markup_percent: optionalNullablePercent,
+  fuel_surcharge_waiver_percent: optionalNullablePercent,
+  insurance_cover_amount: optionalNullableNumber,
   lounge_access: z.boolean().optional(),
 })

@@ -12,6 +12,10 @@ class Card extends Model
 {
     use HasFactory;
 
+    public const CATEGORIES = [
+        'fuel', 'grocery', 'amazon', 'dining', 'travel', 'utilities', 'online', 'medicines', 'online_food', 'other',
+    ];
+
     protected $attributes = [
         'current_outstanding' => 0,
         'annual_fee_amount' => 0,
@@ -43,6 +47,9 @@ class Card extends Model
         'best_categories',
         'reward_rate_general',
         'cashback_cap_amount',
+        'forex_markup_percent',
+        'fuel_surcharge_waiver_percent',
+        'insurance_cover_amount',
         'lounge_access',
         'is_active',
     ];
@@ -59,6 +66,9 @@ class Card extends Model
             'reward_point_value_estimate' => 'decimal:4',
             'reward_rate_general' => 'decimal:2',
             'cashback_cap_amount' => 'decimal:2',
+            'forex_markup_percent' => 'decimal:2',
+            'fuel_surcharge_waiver_percent' => 'decimal:2',
+            'insurance_cover_amount' => 'decimal:2',
             'best_categories' => 'array',
             'lounge_access' => 'boolean',
             'is_active' => 'boolean',
@@ -78,6 +88,16 @@ class Card extends Model
     public function spendEntries(): HasMany
     {
         return $this->hasMany(MonthlySpendEntry::class);
+    }
+
+    public function statements(): HasMany
+    {
+        return $this->hasMany(Statement::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
     }
 
     /**
