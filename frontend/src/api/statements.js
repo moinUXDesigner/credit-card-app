@@ -14,9 +14,15 @@ export const uploadStatement = (cardId, file, billingMonth, billingYear) => {
 
 export const deleteStatement = (id) => client.delete(`/statements/${id}`).then((r) => r.data)
 
-export const downloadStatement = async (id, filename) => {
+const fetchStatementBlobUrl = async (id) => {
   const response = await client.get(`/statements/${id}/download`, { responseType: 'blob' })
-  const url = window.URL.createObjectURL(new Blob([response.data]))
+  return window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+}
+
+export const getStatementViewUrl = (id) => fetchStatementBlobUrl(id)
+
+export const downloadStatement = async (id, filename) => {
+  const url = await fetchStatementBlobUrl(id)
   const link = document.createElement('a')
   link.href = url
   link.download = filename

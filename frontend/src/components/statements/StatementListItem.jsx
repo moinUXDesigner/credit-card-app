@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Badge from '../common/Badge'
-import { downloadStatement } from '../../api/statements'
+import Offcanvas from '../common/Offcanvas'
+import { downloadStatement, getStatementViewUrl } from '../../api/statements'
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -11,6 +12,28 @@ const STATUS_COLOR = { completed: 'green', pending: 'yellow', failed: 'red' }
 
 export default function StatementListItem({ statement, onDelete }) {
   const [expanded, setExpanded] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState(null)
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewLoading, setViewLoading] = useState(false)
+
+  const openViewer = async () => {
+    setViewerOpen(true)
+    setViewLoading(true)
+    try {
+      const url = await getStatementViewUrl(statement.id)
+      setPdfUrl(url)
+    } finally {
+      setViewLoading(false)
+    }
+  }
+
+  const closeViewer = () => {
+    setViewerOpen(false)
+    if (pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl)
+      setPdfUrl(null)
+    }
+  }
 
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm">
@@ -34,6 +57,9 @@ export default function StatementListItem({ statement, onDelete }) {
               {expanded ? 'Hide' : `${statement.transactions.length} transactions`}
             </button>
           )}
+          <button onClick={openViewer} className="text-indigo-600 hover:underline">
+            View
+          </button>
           <button
             onClick={() => downloadStatement(statement.id, statement.original_filename)}
             className="text-indigo-600 hover:underline"
@@ -61,6 +87,13 @@ export default function StatementListItem({ statement, onDelete }) {
           ))}
         </div>
       )}
+
+      <Offcanvas open={viewerOpen} onClose={closeViewer} title={statement.original_filename}>
+        {viewLoading && <p className="p-4 text-sm text-gray-600">Loading statement…</p>}
+        {!viewLoading && pdfUrl && (
+          <iframe src={pdfUrl} title={statement.original_filename} className="h-full w-full" />
+        )}
+      </Offcanvas>
     </div>
   )
 }
