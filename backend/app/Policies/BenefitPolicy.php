@@ -9,16 +9,16 @@ class BenefitPolicy
 {
     public function view(User $user, Benefit $benefit): bool
     {
-        return $user->id === $benefit->card->user_id;
+        return in_array($benefit->card->permissionFor($user), ['owner', 'editor', 'viewer'], true);
     }
 
     public function update(User $user, Benefit $benefit): bool
     {
-        return $user->id === $benefit->card->user_id;
+        return in_array($benefit->card->permissionFor($user), ['owner', 'editor'], true);
     }
 
     public function delete(User $user, Benefit $benefit): bool
     {
-        return $user->id === $benefit->card->user_id;
+        return in_array($benefit->card->permissionFor($user), ['owner', 'editor'], true);
     }
 }

@@ -14,10 +14,19 @@ import CalendarPage from './pages/CalendarPage'
 import Reports from './pages/Reports'
 import Comparison from './pages/Comparison'
 import SpendAnalyzer from './pages/SpendAnalyzer'
+import SyncCenter from './pages/SyncCenter'
+import Admin from './pages/Admin'
+import Sharing from './pages/Sharing'
+import ImportMessages from './pages/ImportMessages'
+import DevelopmentLedger from './pages/DevelopmentLedger'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
   { path: '/register', element: <Register /> },
+  ...(import.meta.env.DEV ? [{
+    element: <AppShell />,
+    children: [{ path: '/development-ledger', element: <DevelopmentLedger /> }],
+  }] : []),
   {
     element: <ProtectedRoute />,
     children: [
@@ -36,6 +45,11 @@ export const router = createBrowserRouter([
           { path: '/reports', element: <Reports /> },
           { path: '/comparison', element: <Comparison /> },
           { path: '/spend-analyzer', element: <SpendAnalyzer /> },
+          { path: '/sync', element: <SyncCenter /> },
+          { path: '/admin', element: <Admin /> },
+          { path: '/sharing', element: <Sharing /> },
+          { path: '/import-messages', element: <ImportMessages /> },
+          ...(!import.meta.env.DEV ? [{ path: '/development-ledger', element: <DevelopmentLedger /> }] : []),
         ],
       },
     ],

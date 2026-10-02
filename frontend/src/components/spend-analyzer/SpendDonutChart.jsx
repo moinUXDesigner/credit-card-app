@@ -22,7 +22,7 @@ function ChartTooltip({ active, payload }) {
 export default function SpendDonutChart({ categories, totalSpend }) {
   return (
     <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-      <div className="relative mx-auto h-64 w-64 shrink-0">
+      <div className="relative mx-auto aspect-square w-full max-w-64 shrink-0 sm:w-64">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -50,13 +50,13 @@ export default function SpendDonutChart({ categories, totalSpend }) {
 
       <ul className="min-w-0 flex-1 space-y-2">
         {categories.map((entry) => (
-          <li key={entry.category} className="flex items-center justify-between gap-3 text-sm">
+          <li key={entry.category} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
             <span className="flex min-w-0 items-center gap-2 text-gray-700">
               <span
                 className="h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: getCategoryColor(entry.category) }}
               />
-              <span className="truncate">{getCategoryLabel(entry.category)}</span>
+              <span className="break-words">{getCategoryLabel(entry.category)}</span>
             </span>
             <span className="shrink-0 text-gray-900">
               {formatCurrency(entry.amount)} · {entry.percentage}%

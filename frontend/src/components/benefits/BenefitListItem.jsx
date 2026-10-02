@@ -8,14 +8,14 @@ function isExpiringSoon(expiryDate) {
   return days >= 0 && days <= EXPIRY_SOON_DAYS
 }
 
-export default function BenefitListItem({ benefit, onMarkUsed, onDelete }) {
+export default function BenefitListItem({ benefit, onMarkUsed, onDelete, readOnly }) {
   const exhausted = benefit.remaining <= 0
   const expiringSoon = isExpiringSoon(benefit.expiry_date)
 
   return (
-    <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm">
+    <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center rounded-lg border bg-white p-4 shadow-sm">
       <div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="font-medium text-gray-900">{benefit.title}</span>
           <Badge color="indigo">{benefit.type}</Badge>
           <Badge color="gray">{benefit.frequency}</Badge>
@@ -28,17 +28,17 @@ export default function BenefitListItem({ benefit, onMarkUsed, onDelete }) {
           {benefit.expiry_date && ` · expires ${benefit.expiry_date}`}
         </p>
       </div>
-      <div className="flex gap-3 text-sm">
+      <div className="flex shrink-0 flex-wrap gap-3 text-sm">
         <button
           onClick={() => onMarkUsed(benefit.id)}
-          disabled={exhausted}
+          disabled={exhausted || readOnly}
           className="text-indigo-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline"
         >
           Mark used
         </button>
-        <button onClick={() => onDelete(benefit.id)} className="text-red-600 hover:underline">
+        {!readOnly && <button onClick={() => onDelete(benefit.id)} className="text-red-600 hover:underline">
           Delete
-        </button>
+        </button>}
       </div>
     </div>
   )

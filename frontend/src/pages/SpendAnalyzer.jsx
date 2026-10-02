@@ -16,8 +16,8 @@ function SpendAnalyzerSkeleton() {
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-        <Skeleton className="mx-auto h-64 w-64 shrink-0 rounded-full" />
-        <div className="flex-1 space-y-3">
+        <Skeleton className="mx-auto aspect-square w-64 shrink-0 rounded-full" />
+        <div className="min-w-0 flex-1 space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-4 w-full" />
           ))}
@@ -44,7 +44,7 @@ export default function SpendAnalyzer() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <h1 className="text-lg font-semibold text-gray-900">Spend Analyzer</h1>
         <select
           value={months}
@@ -63,7 +63,7 @@ export default function SpendAnalyzer() {
 
       {!loading && data && (
         <div className="rounded-lg border bg-white p-4 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
             <p className="text-sm text-gray-600">
               Analyzing spend for period:{' '}
               <span className="font-medium text-gray-900">

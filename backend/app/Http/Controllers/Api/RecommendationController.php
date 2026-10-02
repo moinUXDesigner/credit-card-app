@@ -13,7 +13,7 @@ class RecommendationController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $cards = $request->user()->cards()->with('benefits')->where('is_active', true)->get();
+        $cards = $request->user()->accessibleCards()->with('benefits')->where('is_active', true)->get();
 
         $category = $request->query('category');
 
@@ -22,7 +22,7 @@ class RecommendationController extends Controller
 
     public function monthlyPlan(Request $request): JsonResponse
     {
-        $cards = $request->user()->cards()->with('benefits')->where('is_active', true)->get();
+        $cards = $request->user()->accessibleCards()->with('benefits')->where('is_active', true)->get();
 
         $categories = array_values(array_filter((array) $request->query('categories', [])));
         $topN = (int) $request->query('top_n', 2);

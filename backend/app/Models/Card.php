@@ -17,6 +17,7 @@ class Card extends Model
     ];
 
     protected $attributes = [
+        'revision' => 1,
         'current_outstanding' => 0,
         'annual_fee_amount' => 0,
         'waiver_spend_required' => 0,
@@ -73,6 +74,13 @@ class Card extends Model
             'lounge_access' => 'boolean',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function permissionFor(?User $user): ?string
+    {
+        if (!$user) return null;
+        if ($user->id === $this->user_id) return 'owner';
+        return \Illuminate\Support\Facades\DB::table('card_memberships')->where('card_id',$this->id)->where('user_id',$user->id)->whereNotNull('accepted_at')->value('permission');
     }
 
     public function user(): BelongsTo

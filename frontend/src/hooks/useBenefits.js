@@ -21,6 +21,8 @@ export function useBenefits(cardId) {
 
   useEffect(() => {
     refresh()
+    window.addEventListener('sync-data', refresh)
+    return () => window.removeEventListener('sync-data', refresh)
   }, [refresh])
 
   return { benefits, loading, refresh }

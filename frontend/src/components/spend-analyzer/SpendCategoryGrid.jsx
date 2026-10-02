@@ -6,9 +6,9 @@ function formatCurrency(value) {
 
 export default function SpendCategoryGrid({ categories }) {
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
       {categories.map((entry) => (
-        <div key={entry.category} className="flex flex-col items-center gap-2 rounded-lg border p-4 text-center">
+        <div key={entry.category} className="flex flex-col items-center gap-2 min-w-0 rounded-lg border p-3 text-center sm:p-4">
           <span
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
             style={{ backgroundColor: getCategoryColor(entry.category) }}

@@ -38,13 +38,13 @@ export default function CardForm({ initialValues, onSubmit, submitLabel = 'Save'
     defaultValues: { ...DEFAULTS, ...initialValues },
   })
 
-  const fieldClass = 'mt-1 w-full rounded border px-3 py-2'
+  const fieldClass = 'mt-1 min-w-0 w-full rounded border px-3 py-2'
   const labelClass = 'block text-sm font-medium text-gray-700'
   const errorClass = 'mt-1 text-xs text-red-600'
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 rounded-lg border bg-white p-6 shadow-sm">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className={labelClass}>Card name</label>
           <input {...register('card_name')} className={fieldClass} />

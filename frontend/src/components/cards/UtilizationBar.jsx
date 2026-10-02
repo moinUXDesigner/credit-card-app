@@ -11,7 +11,7 @@ export default function UtilizationBar({ percentage, band, message }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
         <span className="text-gray-600">Utilization</span>
         <span className={`font-medium ${colors.text}`}>{percentage.toFixed(1)}%</span>
       </div>

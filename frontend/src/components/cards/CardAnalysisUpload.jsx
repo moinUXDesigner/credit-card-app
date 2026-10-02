@@ -31,7 +31,7 @@ export default function CardAnalysisUpload({ onAnalyzed }) {
 
   return (
     <div className="space-y-2 rounded-lg border border-dashed bg-gray-50 p-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center gap-3">
         <div>
           <p className="text-sm font-medium text-gray-900">Upload a statement or card photo</p>
           <p className="text-xs text-gray-500">
@@ -39,7 +39,7 @@ export default function CardAnalysisUpload({ onAnalyzed }) {
             read, you can fill in yourself. The file itself is never saved.
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
           <button
             type="button"
             disabled={analyzing}

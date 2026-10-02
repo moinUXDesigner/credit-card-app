@@ -1,7 +1,31 @@
 import axios from 'axios'
+import { supported, cachedRead, cacheResponse, enqueue, keyFor } from '../sync/engine'
+import { readAccount } from '../sync/storage'
 import { useAuthStore } from '../store/authStore'
 
-const client = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL })
+const networkAdapter = axios.getAdapter(axios.defaults.adapter)
+const client = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL, adapter: async (config) => {
+ const path=config.url.split('?')[0], method=(config.method??'GET').toUpperCase(), id=useAuthStore.getState().user?.id
+ const account=id?await readAccount(id).catch(()=>null):null
+ if(account?.enabled && supported(method,path)) {
+  const data=await enqueue(method,path,config.data)
+  return {data,status:202,statusText:'Queued',headers:{},config,request:null}
+ }
+ if(method==='GET' && account?.enabled && (!navigator.onLine || account.queue.length)) {
+  const cached=await cachedRead(path,config.params)
+  if(cached!==undefined)return {data:cached,status:200,statusText:'Offline cache',headers:{},config,request:null}
+ }
+ if(!navigator.onLine)throw new Error(`This view is not cached, or this action requires an online connection (${keyFor(path,config.params)}).`)
+ try {
+  const response=await networkAdapter(config)
+  // Axios transforms JSON after the adapter returns; parse it before caching.
+  if(method==='GET') { let data=response.data; if(typeof data==='string'){try{data=JSON.parse(data)}catch{/* Non-JSON response such as a downloaded PDF. */}} await cacheResponse(path,config.params,data) }
+  return response
+ } catch(error) {
+  if(!error.response && method==='GET'){const cached=await cachedRead(path,config.params);if(cached!==undefined)return {data:cached,status:200,statusText:'Cached',headers:{},config,request:null}}
+  throw error
+ }
+} })
 
 client.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token
@@ -25,6 +49,7 @@ client.interceptors.response.use(
         original.headers.Authorization = `Bearer ${data.access_token}`
         return client(original)
       } catch {
+        // Retain offline queue on expiry; explicit logout clears it after review.
         useAuthStore.getState().logout()
         window.location.href = '/login'
       }

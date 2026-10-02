@@ -21,7 +21,7 @@ class SpendAnalyzerService
         $toKey = $now->year * 12 + $now->month;
         $fromKey = $toKey - ($months - 1);
 
-        $cardIds = $user->cards()->pluck('id');
+        $cardIds = $user->accessibleCards()->pluck('id');
 
         $rows = MonthlySpendEntry::query()
             ->whereIn('card_id', $cardIds)

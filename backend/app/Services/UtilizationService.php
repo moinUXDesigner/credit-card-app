@@ -34,7 +34,7 @@ class UtilizationService
         $totalOutstanding = $cards->sum(fn (Card $c) => (float) $c->current_outstanding);
 
         $totalLimit = $cards
-            ->unique(fn (Card $c) => $c->shared_limit_group ?: 'card-'.spl_object_id($c))
+            ->unique(fn (Card $c) => $c->shared_limit_group ? $c->user_id.':'.$c->shared_limit_group : 'card-'.($c->id ?? spl_object_id($c)))
             ->sum(fn (Card $c) => (float) $c->total_limit);
 
         if ($totalLimit <= 0) {

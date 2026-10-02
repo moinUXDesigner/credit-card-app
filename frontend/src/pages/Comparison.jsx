@@ -60,7 +60,7 @@ export default function Comparison() {
         <p className="text-sm text-gray-500">Select two or more cards to compare.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border bg-white shadow-sm">
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-sm [&_td]:min-w-36 [&_th]:min-w-36">
             <thead>
               <tr className="border-b bg-gray-50">
                 <th className="px-4 py-2 text-left font-medium text-gray-600"></th>

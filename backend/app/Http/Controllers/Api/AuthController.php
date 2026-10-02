@@ -29,6 +29,7 @@ class AuthController extends Controller
     public function login(LoginRequest $request): JsonResponse
     {
         $credentials = $request->only('email', 'password');
+        abort_if(User::where('email', $credentials['email'])->whereNotNull('suspended_at')->exists(), 403, 'This account is suspended.');
 
         if (! $token = JWTAuth::attempt($credentials)) {
             return response()->json(['message' => 'Invalid credentials.'], 401);

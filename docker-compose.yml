@@ -1,8 +1,8 @@
 services:
   app:
     build:
-      context: ./docker/php
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./docker/php/Dockerfile
     container_name: ccapp-php
     volumes:
       - ./backend:/var/www/html

@@ -18,6 +18,13 @@ class StatementTest extends TestCase
     {
         parent::setUp();
         Storage::fake('local');
+        \Carbon\Carbon::setTestNow('2026-07-15');
+    }
+
+    protected function tearDown(): void
+    {
+        \Carbon\Carbon::setTestNow();
+        parent::tearDown();
     }
 
     private function authHeaders(User $user): array
@@ -63,7 +70,7 @@ class StatementTest extends TestCase
     public function test_user_can_upload_statement_and_it_updates_card_and_spend(): void
     {
         $user = User::factory()->create();
-        $card = Card::factory()->for($user)->create(['current_outstanding' => 0, 'waiver_spend_completed' => 0]);
+        $card = Card::factory()->for($user)->create(['current_outstanding' => 0, 'waiver_spend_completed' => 0, 'card_year_start_month' => 1]);
         $this->mockAnalysisService($this->fixtureAnalysis());
 
         $response = $this->postJson(
@@ -94,7 +101,7 @@ class StatementTest extends TestCase
     public function test_reuploading_a_statement_recomputes_rather_than_double_counts(): void
     {
         $user = User::factory()->create();
-        $card = Card::factory()->for($user)->create();
+        $card = Card::factory()->for($user)->create(['card_year_start_month'=>1]);
 
         $result = $this->fixtureAnalysis();
         $this->mock(StatementAnalysisService::class, function ($mock) use ($result) {
@@ -122,7 +129,7 @@ class StatementTest extends TestCase
     public function test_upload_rejects_non_pdf_and_missing_billing_period(): void
     {
         $user = User::factory()->create();
-        $card = Card::factory()->for($user)->create();
+        $card = Card::factory()->for($user)->create(['card_year_start_month'=>1]);
 
         $this->postJson(
             "/api/cards/{$card->id}/statements",
@@ -153,7 +160,7 @@ class StatementTest extends TestCase
     public function test_user_can_list_own_statements(): void
     {
         $user = User::factory()->create();
-        $card = Card::factory()->for($user)->create();
+        $card = Card::factory()->for($user)->create(['card_year_start_month'=>1]);
         $this->mockAnalysisService($this->fixtureAnalysis());
 
         $this->postJson(
@@ -188,7 +195,7 @@ class StatementTest extends TestCase
     public function test_owner_can_download_and_delete_statement(): void
     {
         $user = User::factory()->create();
-        $card = Card::factory()->for($user)->create();
+        $card = Card::factory()->for($user)->create(['card_year_start_month'=>1]);
         $this->mockAnalysisService($this->fixtureAnalysis());
 
         $statementId = $this->postJson(

@@ -11,6 +11,7 @@ class MonthlySpendEntryResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'revision' => $this->revision,
             'card_id' => $this->card_id,
             'year' => $this->year,
             'month' => $this->month,

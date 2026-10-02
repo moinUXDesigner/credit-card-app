@@ -11,6 +11,7 @@ class StatementResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'revision' => $this->revision,
             'card_id' => $this->card_id,
             'original_filename' => $this->original_filename,
             'billing_month' => $this->billing_month,

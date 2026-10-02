@@ -6,13 +6,15 @@ import WaiverProgressBar from '../waiver/WaiverProgressBar'
 export default function CardListItem({ card, onDelete }) {
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between">
-        <Link to={`/cards/${card.id}`} className="block hover:opacity-80">
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+        <Link to={`/cards/${card.id}`} className="block min-w-0 hover:opacity-80">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="font-medium text-gray-900">
               {card.bank_name} {card.card_name}
             </span>
             <Badge color="indigo">{card.network}</Badge>
+            {card.pending && <Badge color="orange">Pending sync</Badge>}
+            {card.permission !== 'owner' && <Badge color="gray">{card.permission}</Badge>}
             <span className="text-sm text-gray-500">•••• {card.last_four_digits}</span>
           </div>
           <p className="mt-1 text-sm text-gray-600">
@@ -26,17 +28,17 @@ export default function CardListItem({ card, onDelete }) {
             </p>
           )}
         </Link>
-        <div className="flex gap-3 text-sm">
-          <Link to={`/cards/${card.id}/edit`} className="text-indigo-600 hover:underline">
+        <div className="flex shrink-0 flex-wrap gap-3 text-sm">
+          {card.permission !== 'viewer' && <Link to={`/cards/${card.id}/edit`} className="text-indigo-600 hover:underline">
             Edit
-          </Link>
-          <button onClick={() => onDelete(card.id)} className="text-red-600 hover:underline">
+          </Link>}
+          {card.permission === 'owner' && <button onClick={() => onDelete(card.id)} className="text-red-600 hover:underline">
             Delete
-          </button>
+          </button>}
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-6">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <UtilizationBar
           percentage={card.utilization_percentage}
           band={card.utilization_band}

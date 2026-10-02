@@ -11,6 +11,8 @@ This is **not** a payment app — it never stores full card numbers, CVV, PIN, O
 
 ## Project structure
 
+See the [development ledger](DEVELOPMENT_LEDGER.md) for scoped features, built implementations, pending work, and verification status.
+
 ```
 credit-card-app/
 ├── docker-compose.yml      # app (PHP-FPM), nginx, mysql
@@ -25,8 +27,11 @@ credit-card-app/
 
 ```bash
 cp .env.example .env                  # root compose env (DB creds, ports)
+cp backend/.env.example backend/.env  # persistent Laravel configuration
 docker compose up --build -d
-docker compose exec app composer install   # first time only
+docker compose exec app composer install   # first time only, includes test dependencies
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan jwt:secret
 docker compose exec app php artisan migrate
 ```
 
@@ -64,7 +69,11 @@ Tests run against an in-memory SQLite database (`phpunit.xml`), not MySQL, so no
 - Dashboard summary (overall utilization, upcoming due/statement dates, waiver alerts, unused benefits) and a calendar view of each card's key dates
 - Daily due-date reminder email job (`php artisan reminders:send-due-dates`, scheduled via `bootstrap/app.php`)
 
-Deferred for a later phase: SMS/email/PDF statement parsing, AI-assisted recommendations, family/multi-user card sharing, cloud sync, Capacitor/Android packaging.
+Additional web features: admin account operations, manual SMS/email message import with editable previews, PDF statement analysis, AI explanations of deterministic recommendations, per-card viewer/editor invitations, and offline account synchronization. Enable offline storage through Sync Center on a trusted device.
+
+Deferred: automatic mailbox/device-SMS ingestion and Capacitor/Android packaging. This implementation is a web app only; Android will be planned later.
+
+See [deployment and feature operations](docs/DEVELOPMENT_AND_DEPLOYMENT.md) for permissions, synchronization contracts, limits, and validation commands.
 
 ## Security notes
 

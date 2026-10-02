@@ -23,16 +23,16 @@ function LogSpendRow({ card, year, month, onSaved }) {
   }
 
   return (
-    <div className="flex items-center justify-between border-b py-2 last:border-0">
+    <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center border-b py-2 last:border-0">
       <span className="text-sm text-gray-700">{card.card_name}</span>
-      <div className="flex items-center gap-2">
+      <div className="flex w-full items-center gap-2 sm:w-auto">
         <input
           type="number"
           step="0.01"
           placeholder="Amount spent"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="w-32 rounded border px-2 py-1 text-sm"
+          className="min-w-0 w-full rounded border sm:w-32 px-2 py-1 text-sm"
         />
         <button
           onClick={handleSave}
@@ -106,7 +106,7 @@ export default function Reports() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <h1 className="text-lg font-semibold text-gray-900">Reports</h1>
         <div className="flex gap-2">
           <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="rounded border px-2 py-1 text-sm">
@@ -127,7 +127,7 @@ export default function Reports() {
 
       <div className="rounded-lg border bg-white p-4 shadow-sm">
         <h2 className="mb-2 text-sm font-semibold text-gray-900">Log spend for this month</h2>
-        {cards.map((card) => (
+        {cards.filter(card=>card.permission !== 'viewer').map((card) => (
           <LogSpendRow key={card.id} card={card} year={year} month={month} onSaved={refresh} />
         ))}
       </div>
@@ -150,7 +150,7 @@ export default function Reports() {
           <div className="rounded-lg border bg-white p-4 shadow-sm">
             <h2 className="mb-2 text-sm font-semibold text-gray-900">Waiver progress</h2>
             {report.waiver_progress.map((w) => (
-              <div key={w.card_id} className="flex justify-between py-1 text-sm">
+              <div key={w.card_id} className="flex flex-col gap-1 py-2 text-sm sm:flex-row sm:justify-between sm:gap-3">
                 <span className="text-gray-700">{w.card_name}</span>
                 <span className="text-gray-900">{w.waiver_progress_percentage}%</span>
               </div>
@@ -160,7 +160,7 @@ export default function Reports() {
           <div className="rounded-lg border bg-white p-4 shadow-sm">
             <h2 className="mb-2 text-sm font-semibold text-gray-900">Utilization status</h2>
             {report.utilization_status.map((u) => (
-              <div key={u.card_id} className="flex justify-between py-1 text-sm">
+              <div key={u.card_id} className="flex flex-col gap-1 py-2 text-sm sm:flex-row sm:justify-between sm:gap-3">
                 <span className="text-gray-700">{u.card_name}</span>
                 <span className="text-gray-900">
                   {u.utilization_percentage}% ({u.band.replace(/_/g, ' ')})
@@ -173,7 +173,7 @@ export default function Reports() {
             <h2 className="mb-2 text-sm font-semibold text-gray-900">Unused benefits</h2>
             {report.unused_benefits.length === 0 && <p className="text-sm text-gray-500">None.</p>}
             {report.unused_benefits.map((b) => (
-              <div key={b.id} className="flex justify-between py-1 text-sm">
+              <div key={b.id} className="flex flex-col gap-1 py-2 text-sm sm:flex-row sm:justify-between sm:gap-3">
                 <span className="text-gray-700">{b.title}</span>
                 <span className="text-gray-900">{b.remaining} remaining</span>
               </div>

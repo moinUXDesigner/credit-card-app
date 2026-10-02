@@ -15,7 +15,7 @@ class ReportService
 
     public function monthly(User $user, int $year, int $month): array
     {
-        $cards = $user->cards()
+        $cards = $user->accessibleCards()
             ->with(['benefits', 'spendEntries' => function ($query) use ($year, $month) {
                 $query->where('year', $year)->where('month', $month);
             }])

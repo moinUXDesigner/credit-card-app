@@ -24,7 +24,7 @@ class DashboardController extends Controller
     public function index(Request $request): JsonResponse
     {
         $now = Carbon::now();
-        $cards = $request->user()->cards()->with('benefits')->where('is_active', true)->get();
+        $cards = $request->user()->accessibleCards()->with('benefits')->where('is_active', true)->get();
 
         $overallPct = $this->utilizationService->overallUtilization($cards);
 

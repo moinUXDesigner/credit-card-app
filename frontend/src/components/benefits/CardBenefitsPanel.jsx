@@ -4,7 +4,7 @@ import { createBenefit, deleteBenefit, markBenefitUsed } from '../../api/benefit
 import BenefitForm from './BenefitForm'
 import BenefitListItem from './BenefitListItem'
 
-export default function CardBenefitsPanel({ cardId }) {
+export default function CardBenefitsPanel({ cardId, readOnly }) {
   const { benefits, refresh } = useBenefits(cardId)
   const [showForm, setShowForm] = useState(false)
 
@@ -27,14 +27,14 @@ export default function CardBenefitsPanel({ cardId }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-gray-900">Benefits</h2>
-        <button
+        {!readOnly && <button
           onClick={() => setShowForm((v) => !v)}
           className="rounded bg-indigo-600 px-3 py-2 text-sm text-white hover:bg-indigo-700"
         >
           {showForm ? 'Close' : 'Add Benefit'}
-        </button>
+        </button>}
       </div>
 
       {showForm && <BenefitForm onSubmit={handleAdd} onCancel={() => setShowForm(false)} />}
@@ -43,7 +43,7 @@ export default function CardBenefitsPanel({ cardId }) {
 
       <div className="space-y-3">
         {benefits.map((benefit) => (
-          <BenefitListItem key={benefit.id} benefit={benefit} onMarkUsed={handleMarkUsed} onDelete={handleDelete} />
+          <BenefitListItem key={benefit.id} benefit={benefit} onMarkUsed={handleMarkUsed} onDelete={handleDelete} readOnly={readOnly} />
         ))}
       </div>
     </div>

@@ -30,15 +30,11 @@ class MonthlySpendEntryController extends Controller
 
         $entry = $card->spendEntries()->updateOrCreate(
             ['year' => $validated['year'], 'month' => $validated['month'], 'category' => $validated['category'] ?? null],
-            ['amount_spent' => $validated['amount_spent']],
+            ['manual_amount' => $validated['amount_spent'], 'amount_spent' => $validated['amount_spent']],
         );
 
-        $card->update([
-            'waiver_spend_completed' => $this->waiverService->sumEntriesInCurrentCycle(
-                $card,
-                $card->spendEntries()->get()
-            ),
-        ]);
+        app(\App\Services\SpendAggregationService::class)->recompute($card, [['year'=>$validated['year'], 'month'=>$validated['month']]]);
+        $entry->refresh();
 
         return response()->json(new MonthlySpendEntryResource($entry), 201);
     }

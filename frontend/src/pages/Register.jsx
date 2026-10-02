@@ -31,8 +31,8 @@ export default function Register() {
   const fieldError = (key) => errors[key]?.[0]
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg border bg-white p-6 shadow-sm">
+    <div className="flex min-h-dvh items-center justify-center bg-gray-50 px-4 py-6">
+      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
         <h1 className="text-xl font-semibold text-gray-900">Create account</h1>
         {errors.form && <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{errors.form[0]}</p>}
         {[

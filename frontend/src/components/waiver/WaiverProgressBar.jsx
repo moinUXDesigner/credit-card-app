@@ -8,7 +8,7 @@ export default function WaiverProgressBar({ completed, required, remaining, mont
 
   return (
     <div>
-      <div className="flex items-center justify-between text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
         <span className="text-gray-600">Waiver progress</span>
         <span className="font-medium text-indigo-700">
           ₹{completed.toLocaleString('en-IN')} / ₹{required.toLocaleString('en-IN')}

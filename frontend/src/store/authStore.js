@@ -6,7 +6,8 @@ export const useAuthStore = create(
     (set) => ({
       token: null,
       user: null,
-      setAuth: (token, user) => set({ token, user }),
+      lastUserId: null,
+      setAuth: (token, user) => set({ token, user, lastUserId: user?.id }),
       logout: () => set({ token: null, user: null }),
     }),
     { name: 'ccapp-auth' },

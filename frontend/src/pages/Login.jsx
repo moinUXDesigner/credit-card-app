@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { prepareLogout } from '../sync/engine'
 import { login } from '../api/auth'
 import { useAuthStore } from '../store/authStore'
 import PasswordInput from '../components/common/PasswordInput'
@@ -28,6 +29,8 @@ export default function Login() {
     setLoading(true)
     try {
       const data = await login({ email, password })
+      const previousId = useAuthStore.getState().user?.id ?? useAuthStore.getState().lastUserId
+      if (previousId && previousId !== data.user.id && !await prepareLogout(previousId)) { setError('Account switch cancelled.'); setLoading(false); return }
       setAuth(data.access_token, data.user)
       setLoggedIn(true)
       // Fallback in case the animation's onComplete never fires.
@@ -43,8 +46,8 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg border bg-white p-6 shadow-sm">
+    <div className="flex min-h-dvh items-center justify-center bg-gray-50 px-4 py-6">
+      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
         <h1 className="text-xl font-semibold text-gray-900">Log in</h1>
         {error && <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
         <div>
@@ -76,6 +79,9 @@ export default function Login() {
         <p className="text-center text-sm text-gray-600">
           No account? <Link to="/register" className="text-indigo-600 hover:underline">Register</Link>
         </p>
+        {import.meta.env.DEV && <p className="text-center text-sm">
+          <Link to="/development-ledger" className="text-indigo-600 hover:underline">View development ledger</Link>
+        </p>}
       </form>
     </div>
   )

@@ -3,9 +3,9 @@ import Skeleton from '../common/Skeleton'
 export default function CardListItemSkeleton() {
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
             <Skeleton className="h-5 w-40" />
             <Skeleton className="h-5 w-14 rounded-full" />
             <Skeleton className="h-4 w-16" />
@@ -18,7 +18,7 @@ export default function CardListItemSkeleton() {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-6">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <div>
           <Skeleton className="h-4 w-24" />
           <Skeleton className="mt-2 h-2 w-full rounded-full" />

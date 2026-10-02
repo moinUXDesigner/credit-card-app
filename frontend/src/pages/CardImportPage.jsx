@@ -61,6 +61,7 @@ export default function CardImportPage() {
     try {
       const data = await importCards(file)
       setResult(data)
+      if (data.pending) setError('Import queued. Check Sync Center for processing results after reconnection.')
       setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
     } catch (err) {
@@ -72,14 +73,14 @@ export default function CardImportPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <h1 className="text-lg font-semibold text-gray-900">Bulk Upload Cards</h1>
         <Link to="/cards" className="text-sm text-indigo-600 hover:underline">
           Back to My Cards
         </Link>
       </div>
 
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
+      <div className="rounded-lg border bg-white p-4 shadow-sm sm:p-6">
         <p className="text-sm text-gray-600">
           Upload a CSV, Excel (.xlsx/.xls), ODS, or JSON file to add multiple cards at once. Each row/object needs
           the same fields as the "Add Card" form. <code>best_categories</code> can be a comma/semicolon/pipe
@@ -88,7 +89,7 @@ export default function CardImportPage() {
           <code>shared_limit_group</code> value and matching <code>total_limit</code>.
         </p>
 
-        <div className="mt-3 flex gap-4 text-sm">
+        <div className="mt-3 flex flex-wrap gap-4 text-sm">
           <button type="button" onClick={downloadSampleCsv} className="text-indigo-600 hover:underline">
             Download sample CSV
           </button>
@@ -103,7 +104,7 @@ export default function CardImportPage() {
             type="file"
             accept=".csv,.json,.xlsx,.xls,.ods,.txt"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm text-gray-700"
+            className="block min-w-0 w-full text-sm text-gray-700"
           />
           <button
             type="submit"

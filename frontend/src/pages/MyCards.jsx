@@ -69,9 +69,9 @@ export default function MyCards() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <h1 className="text-lg font-semibold text-gray-900">My Cards</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link
             to="/cards/import"
             className="rounded border border-indigo-600 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50"
@@ -84,7 +84,7 @@ export default function MyCards() {
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
         <label htmlFor="card-sort-field" className="text-sm text-gray-600">
           Sort by
         </label>

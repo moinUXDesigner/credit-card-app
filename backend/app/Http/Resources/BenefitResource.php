@@ -11,6 +11,7 @@ class BenefitResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'revision' => $this->revision,
             'card_id' => $this->card_id,
             'type' => $this->type,
             'title' => $this->title,

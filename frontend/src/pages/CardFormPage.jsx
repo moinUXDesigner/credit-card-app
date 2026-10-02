@@ -26,8 +26,8 @@ function toFormValues(card) {
 
 function CardFormSkeleton() {
   return (
-    <div className="space-y-6 rounded-lg border bg-white p-6 shadow-sm">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-6 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {Array.from({ length: 16 }).map((_, i) => (
           <div key={i}>
             <Skeleton className="h-4 w-28" />
@@ -100,6 +100,8 @@ export default function CardFormPage() {
       setError(err.response?.data?.message ?? 'Failed to save card.')
     }
   }
+
+  if (isEdit && initialValues?.permission === 'viewer') return <p>This shared card is read-only.</p>
 
   if (isEdit && !initialValues) {
     return (

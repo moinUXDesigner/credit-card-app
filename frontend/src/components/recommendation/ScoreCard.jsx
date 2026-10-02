@@ -11,16 +11,16 @@ export default function ScoreCard({ rank, result }) {
 
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">
             {rank}
           </span>
           <span className="font-medium text-gray-900">{card_name}</span>
         </div>
         <span className="text-lg font-semibold text-gray-900">{total_score.toFixed(1)} pts</span>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-gray-600 sm:grid-cols-5">
+      <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-gray-600 md:grid-cols-5">
         {Object.entries(breakdown).map(([key, value]) => (
           <div key={key}>
             <div>{LABELS[key] ?? key}</div>

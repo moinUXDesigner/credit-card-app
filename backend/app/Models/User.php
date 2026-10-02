@@ -16,8 +16,18 @@ use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements JWTSubject
 {
+    protected $attributes = ['role' => 'user'];
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    public function accessibleCards(): \Illuminate\Database\Eloquent\Builder
+    {
+        return Card::query()->where(function ($query) {
+            $query->where('user_id', $this->id)->orWhereExists(function ($q) {
+                $q->selectRaw('1')->from('card_memberships')->whereColumn('card_memberships.card_id', 'cards.id')->where('card_memberships.user_id', $this->id)->whereNotNull('accepted_at');
+            });
+        });
+    }
 
     public function cards(): HasMany
     {
@@ -43,6 +53,7 @@ class User extends Authenticatable implements JWTSubject
     {
         return [
             'email_verified_at' => 'datetime',
+            'suspended_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

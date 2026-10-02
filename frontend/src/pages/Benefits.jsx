@@ -12,9 +12,9 @@ export default function Benefits() {
   if (cardsLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <h1 className="text-lg font-semibold text-gray-900">Benefits</h1>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Skeleton className="h-9 w-40" />
             <Skeleton className="h-9 w-28" />
           </div>
@@ -33,12 +33,12 @@ export default function Benefits() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <h1 className="text-lg font-semibold text-gray-900">Benefits</h1>
         <select
           value={cardId ?? ''}
           onChange={(e) => setSelectedCardId(Number(e.target.value))}
-          className="rounded border px-3 py-2 text-sm"
+          className="min-w-0 max-w-full rounded border px-3 py-2 text-sm"
         >
           {cards.map((c) => (
             <option key={c.id} value={c.id}>
@@ -48,7 +48,7 @@ export default function Benefits() {
         </select>
       </div>
 
-      <CardBenefitsPanel cardId={cardId} />
+      <CardBenefitsPanel cardId={cardId} readOnly={cards.find(c=>String(c.id)===String(cardId))?.permission === 'viewer'} />
     </div>
   )
 }

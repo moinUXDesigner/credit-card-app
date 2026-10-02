@@ -12,6 +12,7 @@ class Benefit extends Model
     use HasFactory;
 
     protected $attributes = [
+        'revision' => 1,
         'used_count' => 0,
     ];
 

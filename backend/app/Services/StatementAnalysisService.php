@@ -25,6 +25,7 @@ class StatementAnalysisService
      */
     public function analyze(UploadedFile $file): array
     {
+        if (!config('services.openai.api_key')) return ['analyzed'=>false, 'message'=>'AI is not configured. The statement was saved without extraction.', 'statement'=>[], 'transactions'=>[]];
         $data = base64_encode(file_get_contents($file->getRealPath()));
 
         $params = [

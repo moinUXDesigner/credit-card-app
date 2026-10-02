@@ -21,6 +21,8 @@ export function useCards() {
 
   useEffect(() => {
     refresh()
+    window.addEventListener('sync-data', refresh)
+    return () => window.removeEventListener('sync-data', refresh)
   }, [refresh])
 
   return { cards, loading, error, refresh }

@@ -34,7 +34,7 @@ function CalendarCardSkeleton() {
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm">
       <Skeleton className="h-5 w-48" />
-      <div className="mt-2 grid grid-cols-3 gap-4">
+      <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <div key={i}>
             <Skeleton className="h-3 w-20" />
@@ -63,16 +63,16 @@ function EventBadge({ label, card, colorClass }) {
   const logoUrl = getBankLogo(card.bank_name)
 
   return (
-    <div className={`rounded px-1 py-0.5 text-[10px] font-medium ${colorClass}`}>
-      <span className="block truncate">
-        {label}-{card.last_four_digits}
+    <div className={`flex items-center gap-1 rounded px-1 py-0.5 text-[10px] font-medium ${colorClass}`}>
+      <span className="min-w-0 flex-1 truncate" title={`${label} · ${card.card_name} · ${card.last_four_digits}`}>
+        {label}<span className="sr-only sm:not-sr-only">-{card.last_four_digits}</span>
       </span>
       {logoUrl && (
         <img
           src={logoUrl}
           alt={card.bank_name}
           title={card.bank_name}
-          className="mt-0.5 h-5 w-full object-contain"
+          className="hidden h-3 w-4 shrink-0 object-contain sm:block"
           onError={(e) => {
             e.currentTarget.style.display = 'none'
           }}
@@ -83,7 +83,7 @@ function EventBadge({ label, card, colorClass }) {
 }
 
 function DayCell({ day, isToday, isSelected, statementCards, dueCards, feeCards, onSelect }) {
-  if (day === null) return <div className="min-h-36 rounded border border-transparent bg-gray-50" />
+  if (day === null) return <div className="min-h-20 rounded border border-transparent bg-gray-50" />
 
   const hasEvents = statementCards.length > 0 || dueCards.length > 0 || feeCards.length > 0
 
@@ -91,13 +91,19 @@ function DayCell({ day, isToday, isSelected, statementCards, dueCards, feeCards,
     <button
       type="button"
       onClick={() => onSelect(day)}
-      className={`min-h-36 rounded border p-1.5 text-left align-top ${
+      aria-label={`Day ${day}${isToday ? ', today' : ''}${hasEvents ? `, ${[
+        ...statementCards.map((c) => `statement for ${c.card_name}, ending in ${c.last_four_digits}`),
+        ...dueCards.map((c) => `payment due for ${c.card_name}, ending in ${c.last_four_digits}`),
+        ...feeCards.map((c) => `annual fee for ${c.card_name}, ending in ${c.last_four_digits}`),
+      ].join('; ')}` : ''}`}
+      aria-pressed={isSelected}
+      className={`flex min-h-20 min-w-0 flex-col rounded border p-1 text-left sm:p-1.5 ${
         isSelected ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-gray-200 hover:border-gray-300'
       } ${isToday ? 'bg-indigo-50' : 'bg-white'}`}
     >
       <div className={`text-xs font-medium ${isToday ? 'text-indigo-700' : 'text-gray-700'}`}>{day}</div>
       {hasEvents && (
-        <div className="mt-1 space-y-0.5">
+        <div className="mt-1 w-full space-y-0.5">
           {statementCards.map((c) => (
             <EventBadge key={`stmt-${c.id}`} label="Stmt" card={c} colorClass="bg-indigo-100 text-indigo-700" />
           ))}
@@ -147,8 +153,8 @@ function CalendarGrid({ cards, cursor, onCursorChange }) {
   const selected = selectedDay ? eventsForDay(selectedDay) : null
 
   return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between">
+    <div className="rounded-lg border bg-white p-2 shadow-sm sm:p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold text-gray-900">
           {MONTH_NAMES[cursor.month - 1]} {cursor.year}
         </h2>
@@ -179,7 +185,7 @@ function CalendarGrid({ cards, cursor, onCursorChange }) {
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-3 text-xs text-gray-600">
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
         <span className="flex items-center gap-1">
           <span className="h-2.5 w-2.5 rounded-full bg-indigo-400" /> Statement date
         </span>
@@ -191,7 +197,7 @@ function CalendarGrid({ cards, cursor, onCursorChange }) {
         </span>
       </div>
 
-      <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-500">
+      <div className="mt-2 grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-500">
         {WEEKDAY_NAMES.map((w) => (
           <div key={w}>{w}</div>
         ))}
@@ -230,7 +236,7 @@ function CalendarGrid({ cards, cursor, onCursorChange }) {
                 <li key={`stmt-${c.id}`} className="flex items-center gap-2">
                   <Badge color="indigo">Statement</Badge>
                   <span className="text-gray-700">
-                    {c.card_name} ({c.bank_name})
+                    {c.card_name} ({c.bank_name}) · •••• {c.last_four_digits}
                   </span>
                 </li>
               ))}
@@ -238,7 +244,7 @@ function CalendarGrid({ cards, cursor, onCursorChange }) {
                 <li key={`due-${c.id}`} className="flex items-center gap-2">
                   <Badge color="red">Due</Badge>
                   <span className="text-gray-700">
-                    {c.card_name} ({c.bank_name})
+                    {c.card_name} ({c.bank_name}) · •••• {c.last_four_digits}
                   </span>
                 </li>
               ))}
@@ -246,7 +252,7 @@ function CalendarGrid({ cards, cursor, onCursorChange }) {
                 <li key={`fee-${c.id}`} className="flex items-center gap-2">
                   <Badge color="yellow">Annual fee</Badge>
                   <span className="text-gray-700">
-                    {c.card_name} ({c.bank_name})
+                    {c.card_name} ({c.bank_name}) · •••• {c.last_four_digits}
                   </span>
                 </li>
               ))}
@@ -285,7 +291,7 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-semibold text-gray-900">Calendar</h1>
         <div className="flex rounded border text-sm">
           <button
@@ -318,7 +324,7 @@ export default function CalendarPage() {
               <h2 className="font-medium text-gray-900">
                 {card.card_name} <span className="text-sm text-gray-500">({card.bank_name})</span>
               </h2>
-              <dl className="mt-2 grid grid-cols-3 gap-4 text-sm">
+              <dl className="mt-2 grid grid-cols-1 gap-3 text-sm sm:grid-cols-3 sm:gap-4">
                 <div>
                   <dt className="text-gray-500">Statement date</dt>
                   <dd className="text-gray-900">Day {card.statement_day} of every month</dd>

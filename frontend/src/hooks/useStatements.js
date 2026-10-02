@@ -21,6 +21,8 @@ export function useStatements(cardId) {
 
   useEffect(() => {
     refresh()
+    window.addEventListener('sync-data', refresh)
+    return () => window.removeEventListener('sync-data', refresh)
   }, [refresh])
 
   return { statements, loading, refresh }

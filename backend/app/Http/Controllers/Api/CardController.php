@@ -14,7 +14,7 @@ class CardController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $cards = $request->user()->cards()->orderBy('card_name')->get();
+        $cards = $request->user()->accessibleCards()->orderBy('card_name')->get();
 
         return response()->json(CardResource::collection($cards));
     }

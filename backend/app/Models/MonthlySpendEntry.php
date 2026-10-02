@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MonthlySpendEntry extends Model
 {
+    protected $attributes = ['revision' => 1];
     use HasFactory;
 
-    protected $fillable = ['year', 'month', 'amount_spent', 'category'];
+    protected $fillable = ['year', 'month', 'amount_spent', 'category', 'manual_amount'];
 
     protected function casts(): array
     {

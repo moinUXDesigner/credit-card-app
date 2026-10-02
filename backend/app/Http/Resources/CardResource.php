@@ -19,6 +19,8 @@ class CardResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'revision' => $this->revision,
+            'permission' => $this->resource->permissionFor($request->user()),
             'card_name' => $this->card_name,
             'bank_name' => $this->bank_name,
             'last_four_digits' => $this->last_four_digits,

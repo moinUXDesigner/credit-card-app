@@ -38,6 +38,7 @@ class StatementController extends Controller
 
         $path = $file->store("statements/{$card->id}", 'local');
 
+        $request->attributes->set('rollback_files', [$path]);
         $statement = $card->statements()->create([
             'file_path' => $path,
             'original_filename' => $file->getClientOriginalName(),
@@ -104,7 +105,8 @@ class StatementController extends Controller
             ->values()
             ->all();
 
-        Storage::disk('local')->delete($statement->file_path);
+        $path = $statement->file_path;
+        \Illuminate\Support\Facades\DB::afterCommit(fn () => Storage::disk('local')->delete($path));
         $statement->delete();
 
         if ($periods !== []) {
@@ -146,40 +148,6 @@ class StatementController extends Controller
      */
     private function recomputeSpendForPeriods(Card $card, array $periods): void
     {
-        foreach ($periods as $period) {
-            $sums = $card->transactions()
-                ->whereNotNull('category')
-                ->whereYear('transaction_date', $period['year'])
-                ->whereMonth('transaction_date', $period['month'])
-                ->get()
-                ->groupBy('category')
-                ->map(fn ($group) => $group->sum('amount'));
-
-            $existingCategories = $card->spendEntries()
-                ->where('year', $period['year'])
-                ->where('month', $period['month'])
-                ->whereNotNull('category')
-                ->pluck('category');
-
-            foreach ($existingCategories as $category) {
-                if (! $sums->has($category)) {
-                    $sums[$category] = 0;
-                }
-            }
-
-            foreach ($sums as $category => $amount) {
-                $card->spendEntries()->updateOrCreate(
-                    ['year' => $period['year'], 'month' => $period['month'], 'category' => $category],
-                    ['amount_spent' => $amount],
-                );
-            }
-        }
-
-        $card->update([
-            'waiver_spend_completed' => $this->waiverService->sumEntriesInCurrentCycle(
-                $card,
-                $card->spendEntries()->get()
-            ),
-        ]);
+        app(\App\Services\SpendAggregationService::class)->recompute($card, $periods);
     }
 }

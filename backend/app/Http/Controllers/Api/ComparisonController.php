@@ -13,7 +13,7 @@ class ComparisonController extends Controller
     {
         $cardIds = (array) $request->query('card_ids', []);
 
-        $cards = $request->user()->cards()
+        $cards = $request->user()->accessibleCards()
             ->when(! empty($cardIds), fn ($query) => $query->whereIn('id', $cardIds))
             ->get();
 

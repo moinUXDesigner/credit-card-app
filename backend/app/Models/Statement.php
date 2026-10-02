@@ -12,6 +12,7 @@ class Statement extends Model
     use HasFactory;
 
     protected $attributes = [
+        'revision' => 1,
         'analysis_status' => 'pending',
     ];
 

@@ -21,12 +21,12 @@ export default function Offcanvas({ open, onClose, title, children }) {
           <button
             onClick={onClose}
             aria-label="Close"
-            className="ml-3 shrink-0 text-xl leading-none text-gray-500 hover:text-gray-700"
+            className="ml-3 flex min-h-11 min-w-11 shrink-0 items-center justify-center text-xl leading-none text-gray-500 hover:text-gray-700"
           >
             &times;
           </button>
         </div>
-        <div className="flex-1 overflow-auto">{children}</div>
+        <div className="min-h-0 min-w-0 flex-1 overflow-auto">{children}</div>
       </div>
     </div>
   )
