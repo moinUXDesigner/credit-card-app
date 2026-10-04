@@ -45,6 +45,7 @@ class CardResource extends JsonResource
             'insurance_cover_amount' => $this->insurance_cover_amount !== null ? (float) $this->insurance_cover_amount : null,
             'lounge_access' => (bool) $this->lounge_access,
             'is_active' => (bool) $this->is_active,
+            'utilization_calculable' => $this->total_limit > 0,
             'utilization_percentage' => $utilizationPct,
             'utilization_band' => $band,
             'utilization_message' => $utilizationService->bandMessage($band),

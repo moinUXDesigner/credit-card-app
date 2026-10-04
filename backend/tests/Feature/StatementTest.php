@@ -5,9 +5,11 @@ namespace Tests\Feature;
 use App\Models\Card;
 use App\Models\User;
 use App\Services\StatementAnalysisService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class StatementTest extends TestCase
@@ -18,12 +20,12 @@ class StatementTest extends TestCase
     {
         parent::setUp();
         Storage::fake('local');
-        \Carbon\Carbon::setTestNow('2026-07-15');
+        Carbon::setTestNow('2026-07-15');
     }
 
     protected function tearDown(): void
     {
-        \Carbon\Carbon::setTestNow();
+        Carbon::setTestNow();
         parent::tearDown();
     }
 
@@ -67,6 +69,25 @@ class StatementTest extends TestCase
         return UploadedFile::fake()->create('statement.pdf', 100, 'application/pdf');
     }
 
+    private function confirmStaged(User $user, Card $card, string $previewId, array $overrides = [])
+    {
+        $preview = $this->getJson("/api/statement-previews/{$previewId}", $this->authHeaders($user))->assertOk()->json();
+        $summary = array_intersect_key($preview['summary'], array_flip(['statement_date', 'due_date', 'total_due', 'minimum_due', 'credit_limit', 'reward_point_balance']));
+        $rows = array_map(function ($row) {
+            unset($row['possible_duplicate']);
+            $row['duplicate_action'] = 'keep';
+
+            return $row;
+        }, $preview['rows']);
+
+        return $this->postJson("/api/cards/{$card->id}/statements", array_replace([
+            'preview_id' => $previewId, 'idempotency_key' => (string) Str::uuid(),
+            'revision' => $card->fresh()->revision, 'billing_month' => 7, 'billing_year' => 2026,
+            'summary' => $summary, 'rows' => $rows, 'acknowledge_identity' => true, 'save_pdf_only' => false,
+            'apply_summary' => $preview['apply_defaults'],
+        ], $overrides), $this->authHeaders($user));
+    }
+
     public function test_user_can_upload_statement_and_it_updates_card_and_spend(): void
     {
         $user = User::factory()->create();
@@ -79,6 +100,10 @@ class StatementTest extends TestCase
             $this->authHeaders($user)
         );
 
+        $response->assertStatus(201)->assertJsonPath('analysis_status', 'pending')->assertJsonCount(0, 'transactions');
+        $this->assertEquals(0, $card->fresh()->current_outstanding);
+        $this->assertDatabaseCount('transactions', 0);
+        $response = $this->confirmStaged($user, $card, $response->json('preview_id'));
         $response->assertStatus(201)
             ->assertJsonPath('analysis_status', 'completed')
             ->assertJsonPath('total_due', 15000)
@@ -98,38 +123,24 @@ class StatementTest extends TestCase
         $this->assertEqualsWithDelta(15000.0, $card->waiver_spend_completed, 0.01);
     }
 
-    public function test_reuploading_a_statement_recomputes_rather_than_double_counts(): void
+    public function test_reuploading_a_statement_never_double_counts(): void
     {
         $user = User::factory()->create();
-        $card = Card::factory()->for($user)->create(['card_year_start_month'=>1]);
-
-        $result = $this->fixtureAnalysis();
-        $this->mock(StatementAnalysisService::class, function ($mock) use ($result) {
-            $mock->shouldReceive('analyze')->twice()->andReturn($result);
-        });
-
-        $this->postJson(
-            "/api/cards/{$card->id}/statements",
-            ['file' => $this->statementFile(), 'billing_month' => 7, 'billing_year' => 2026],
-            $this->authHeaders($user)
-        )->assertStatus(201);
-
-        $this->postJson(
-            "/api/cards/{$card->id}/statements",
-            ['file' => $this->statementFile(), 'billing_month' => 7, 'billing_year' => 2026],
-            $this->authHeaders($user)
-        )->assertStatus(201);
-
-        // Two statements, each with the same 2 fuel transactions (10,000 total) -> 20,000 fuel total across both.
-        $this->assertDatabaseHas('monthly_spend_entries', [
-            'card_id' => $card->id, 'year' => 2026, 'month' => 6, 'category' => 'fuel', 'amount_spent' => 20000.00,
-        ]);
+        $card = Card::factory()->for($user)->create(['card_year_start_month' => 1]);
+        $this->mockAnalysisService($this->fixtureAnalysis());
+        $staged = $this->postJson("/api/cards/{$card->id}/statements", ['file' => $this->statementFile(), 'billing_month' => 7, 'billing_year' => 2026], $this->authHeaders($user))->assertCreated();
+        $confirmed = $this->confirmStaged($user, $card, $staged->json('preview_id'))->assertCreated();
+        $this->postJson("/api/cards/{$card->id}/statements", ['file' => $this->statementFile(), 'billing_month' => 7, 'billing_year' => 2026], $this->authHeaders($user))->assertOk()->assertJsonPath('id', $confirmed->json('id'));
+        $this->confirmStaged($user, $card, $staged->json('preview_id'))->assertOk();
+        $this->assertDatabaseCount('statements', 1);
+        $this->assertDatabaseCount('transactions', 3);
+        $this->assertDatabaseHas('monthly_spend_entries', ['card_id' => $card->id, 'year' => 2026, 'month' => 6, 'category' => 'fuel', 'amount_spent' => 10000.00]);
     }
 
     public function test_upload_rejects_non_pdf_and_missing_billing_period(): void
     {
         $user = User::factory()->create();
-        $card = Card::factory()->for($user)->create(['card_year_start_month'=>1]);
+        $card = Card::factory()->for($user)->create(['card_year_start_month' => 1]);
 
         $this->postJson(
             "/api/cards/{$card->id}/statements",
@@ -160,7 +171,7 @@ class StatementTest extends TestCase
     public function test_user_can_list_own_statements(): void
     {
         $user = User::factory()->create();
-        $card = Card::factory()->for($user)->create(['card_year_start_month'=>1]);
+        $card = Card::factory()->for($user)->create(['card_year_start_month' => 1]);
         $this->mockAnalysisService($this->fixtureAnalysis());
 
         $this->postJson(
@@ -195,14 +206,15 @@ class StatementTest extends TestCase
     public function test_owner_can_download_and_delete_statement(): void
     {
         $user = User::factory()->create();
-        $card = Card::factory()->for($user)->create(['card_year_start_month'=>1]);
+        $card = Card::factory()->for($user)->create(['card_year_start_month' => 1]);
         $this->mockAnalysisService($this->fixtureAnalysis());
 
-        $statementId = $this->postJson(
+        $staged = $this->postJson(
             "/api/cards/{$card->id}/statements",
             ['file' => $this->statementFile(), 'billing_month' => 7, 'billing_year' => 2026],
             $this->authHeaders($user)
-        )->json('id');
+        );
+        $statementId = $this->confirmStaged($user, $card, $staged->json('preview_id'))->assertCreated()->json('id');
 
         $this->getJson("/api/statements/{$statementId}/download", $this->authHeaders($user))->assertStatus(200);
 

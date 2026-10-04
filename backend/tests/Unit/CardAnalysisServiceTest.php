@@ -6,6 +6,7 @@ use App\Exceptions\CardAnalysisUnavailableException;
 use App\Services\CardAnalysisService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Process;
 use Tests\TestCase;
 
 /**
@@ -53,32 +54,15 @@ class CardAnalysisServiceTest extends TestCase
         ]);
     }
 
-    public function test_analyze_sends_input_file_block_for_pdf_and_parses_result(): void
+    public function test_pdf_prefill_extracts_locally_without_provider_call(): void
     {
-        $this->fakeOpenAiResponse($this->fixtureCard());
-
-        $file = UploadedFile::fake()->create('statement.pdf', 100, 'application/pdf');
-
-        $result = (new CardAnalysisService())->analyze($file);
-
+        Http::fake();
+        Process::fake(['*pdftotext*' => Process::result(output: "SBI Card\nTotal Amount Due: 22471.00\nReward Points Balance: 18791")]);
+        $result = (new CardAnalysisService)->analyze(UploadedFile::fake()->create('statement.pdf', 100, 'application/pdf'));
         $this->assertTrue($result['document_recognized']);
-        $this->assertSame('SBI Octane', $result['card']['card_name']);
-        $this->assertSame('visa', $result['card']['network']);
-        $this->assertEqualsWithDelta(300000.0, $result['card']['waiver_spend_required'], 0.01);
-        $this->assertEqualsWithDelta(3.5, $result['card']['forex_markup_percent'], 0.01);
-        $this->assertEqualsWithDelta(1.0, $result['card']['fuel_surcharge_waiver_percent'], 0.01);
-        $this->assertEqualsWithDelta(500000.0, $result['card']['insurance_cover_amount'], 0.01);
-        $this->assertCount(2, $result['suggested_benefits']);
-
-        Http::assertSent(function ($request) {
-            $content = $request->data()['input'][0]['content'];
-            $fileBlock = $content[1];
-
-            return $request->url() === 'https://api.openai.com/v1/responses'
-                && $fileBlock['type'] === 'input_file'
-                && str_starts_with($fileBlock['file_data'], 'data:application/pdf;base64,')
-                && $request->data()['tools'][0]['type'] === 'web_search';
-        });
+        $this->assertEquals(22471, $result['card']['current_outstanding']);
+        $this->assertEquals(18791, $result['card']['reward_point_balance']);
+        Http::assertNothingSent();
     }
 
     public function test_analyze_sends_input_image_block_for_photo(): void
@@ -87,7 +71,7 @@ class CardAnalysisServiceTest extends TestCase
 
         $file = UploadedFile::fake()->create('card.jpg', 50, 'image/jpeg');
 
-        (new CardAnalysisService())->analyze($file);
+        (new CardAnalysisService)->analyze($file);
 
         Http::assertSent(function ($request) {
             $fileBlock = $request->data()['input'][0]['content'][1];
@@ -101,21 +85,21 @@ class CardAnalysisServiceTest extends TestCase
     {
         Http::fake(['api.openai.com/*' => Http::response(['status' => 'failed'])]);
 
-        $file = UploadedFile::fake()->create('statement.pdf', 100, 'application/pdf');
+        $file = UploadedFile::fake()->create('card.jpg', 100, 'image/jpeg');
 
         $this->expectException(CardAnalysisUnavailableException::class);
 
-        (new CardAnalysisService())->analyze($file);
+        (new CardAnalysisService)->analyze($file);
     }
 
     public function test_analyze_throws_when_no_output_text_found(): void
     {
         Http::fake(['api.openai.com/*' => Http::response(['status' => 'completed', 'output' => []])]);
 
-        $file = UploadedFile::fake()->create('statement.pdf', 100, 'application/pdf');
+        $file = UploadedFile::fake()->create('card.jpg', 100, 'image/jpeg');
 
         $this->expectException(CardAnalysisUnavailableException::class);
 
-        (new CardAnalysisService())->analyze($file);
+        (new CardAnalysisService)->analyze($file);
     }
 }

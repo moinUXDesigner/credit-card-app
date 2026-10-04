@@ -108,6 +108,9 @@ class SyncController extends Controller
                 } elseif ($path !== '/cards' && $path !== '/cards/import') {
                     return response()->json(['message' => 'The record was deleted or access was revoked.'], 410);
                 }
+                if (isset($payload['preview_id'], $payload['idempotency_key'], $d['revision'])) {
+                    $payload['revision'] = $d['revision'];
+                }
                 $files = $r->file('file') ? ['file' => $r->file('file')] : [];
                 $sub = Request::create('/api'.$path, $method, $payload, [], $files, ['HTTP_ACCEPT' => 'application/json', 'HTTP_AUTHORIZATION' => $r->header('Authorization')]);
                 $sub->setUserResolver(fn () => $r->user());

@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
+import CardChat from './pages/CardChat'
 import AppShell from './components/layout/AppShell'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import Login from './pages/Login'
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
           { path: '/benefits', element: <Benefits /> },
           { path: '/calendar', element: <CalendarPage /> },
           { path: '/reports', element: <Reports /> },
+          { path: '/chat', element: <CardChat /> },
           { path: '/comparison', element: <Comparison /> },
           { path: '/spend-analyzer', element: <SpendAnalyzer /> },
           { path: '/sync', element: <SyncCenter /> },

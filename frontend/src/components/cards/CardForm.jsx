@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import UtilizationBar from './UtilizationBar'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { cardSchema, NETWORKS, CATEGORIES } from '../../schemas/cardSchema'
@@ -28,15 +30,27 @@ const DEFAULTS = {
   lounge_access: false,
 }
 
-export default function CardForm({ initialValues, onSubmit, submitLabel = 'Save' }) {
+export default function CardForm({ initialValues, existingCards = [], onSubmit, submitLabel = 'Save' }) {
   const {
-    register,
+    register, reset, watch,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, dirtyFields },
   } = useForm({
     resolver: zodResolver(cardSchema),
     defaultValues: { ...DEFAULTS, ...initialValues },
   })
+
+  useEffect(() => {
+    reset({ ...DEFAULTS, ...initialValues }, { keepDirtyValues: true })
+  }, [initialValues, reset])
+  // Subscribe to dirty fields so extraction preserves manual input.
+  void dirtyFields
+  const limit = Number(watch('total_limit'))
+  const outstanding = Number(watch('current_outstanding'))
+  const group = watch('shared_limit_group')
+  const siblings = group ? existingCards.filter((c) => c.shared_limit_group === group && c.permission === 'owner' && String(c.id) !== String(initialValues.id)).reduce((sum, c) => sum + Number(c.current_outstanding), 0) : 0
+  const percentage = limit > 0 ? (outstanding + siblings) / limit * 100 : null
+  const band = percentage < 30 ? 'good' : percentage < 50 ? 'caution' : percentage < 75 ? 'avoid_further_use' : 'urgent_repayment'
 
   const fieldClass = 'mt-1 min-w-0 w-full rounded border px-3 py-2'
   const labelClass = 'block text-sm font-medium text-gray-700'
@@ -44,6 +58,7 @@ export default function CardForm({ initialValues, onSubmit, submitLabel = 'Save'
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+      <UtilizationBar percentage={percentage} band={band} message={group ? 'Preview includes existing owned cards in this shared group. Final usage is calculated after saving.' : 'Preview from outstanding balance and credit limit.'} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className={labelClass}>Card name</label>

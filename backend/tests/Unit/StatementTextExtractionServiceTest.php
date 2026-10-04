@@ -77,7 +77,7 @@ class StatementTextExtractionServiceTest extends TestCase
 
     private function service(): StatementTextExtractionService
     {
-        return new StatementTextExtractionService(new CardFieldSanitizer());
+        return new StatementTextExtractionService(new CardFieldSanitizer);
     }
 
     public function test_extracts_fields_from_sbi_style_statement(): void
@@ -90,6 +90,7 @@ class StatementTextExtractionServiceTest extends TestCase
         $this->assertSame('low', $result['confidence']);
         $this->assertSame('SBI Card', $result['card']['bank_name']);
         $this->assertEqualsWithDelta(391000.0, $result['card']['total_limit'], 0.01);
+        $this->assertEquals(47098, $result['card']['current_outstanding']);
         $this->assertSame(1, $result['card']['statement_day']);
         $this->assertSame(21, $result['card']['due_day']);
         // Only 2 digits are visible in this mask style — must stay null,
@@ -107,6 +108,7 @@ class StatementTextExtractionServiceTest extends TestCase
         $this->assertTrue($result['document_recognized']);
         $this->assertSame('ICICI', $result['card']['bank_name']);
         $this->assertEqualsWithDelta(200000.0, $result['card']['total_limit'], 0.01);
+        $this->assertEquals(32268, $result['card']['current_outstanding']);
         $this->assertSame(12, $result['card']['statement_day']);
         $this->assertSame(30, $result['card']['due_day']);
         $this->assertSame('9002', $result['card']['last_four_digits']);
@@ -145,5 +147,59 @@ class StatementTextExtractionServiceTest extends TestCase
         $result = $this->service()->extract($this->fakeFile());
 
         $this->assertEqualsWithDelta(200000.0, $result['card']['total_limit'], 0.01);
+    }
+
+    public function test_mask_variants_preserve_leading_zeros_and_ambiguous_masks_remain_unknown(): void
+    {
+        foreach (['XXXX XXXX XXXX 0001', '****-****-****-0001', '•••• •••• •••• 0001', '4315XXXXXXXX0001'] as $mask) {
+            Process::fake(['*pdftotext*' => Process::result(output: "ICICI Card Number: {$mask}\nTotal Due: INR 15000.00\nMinimum Due: 500.00")]);
+            $result = $this->service()->extract($this->fakeFile());
+            $this->assertSame('0001', $result['card']['last_four_digits']);
+            $this->assertEquals(15000, $result['card']['current_outstanding']);
+        }
+        Process::fake(['*pdftotext*' => Process::result(output: 'ICICI Card Number XXXX XXXX XXXX 0001 and XXXX XXXX XXXX 1234')]);
+        $this->assertNull($this->service()->extract($this->fakeFile())['card']['last_four_digits']);
+    }
+
+    public function test_numeric_dates_and_summary_heading_before_boilerplate(): void
+    {
+        Process::fake(['*pdftotext*' => Process::result(output: "YES BANK\nStatement Date: 20/06/2026\nTotal Amount Due:       Cash Limit: 113000\nRs. 537.00             Rs. 33900.00\nPayment Due Date: 10/07/2026\nIf total amount due is not paid\n113000.00")]);
+        $result = $this->service()->extract($this->fakeFile());
+        $this->assertEquals(537, $result['card']['current_outstanding']);
+        $this->assertSame(20, $result['card']['statement_day']);
+        $this->assertSame(10, $result['card']['due_day']);
+    }
+
+    public function test_reads_product_and_closing_rewards_on_later_pages(): void
+    {
+        $text = self::SBI_STYLE_TEXT.str_repeat(' ', 9000)."\f"
+            ."BPCL SBI Card OCTANE                 Monthly Statement       SBI Card\n"
+            ."SHOP & SMILE SUMMARY\n"
+            ."                 Redeemed/Expired\n"
+            ."Previous Balance    Earned    /Reversed    Closing Balance    Points Expiry Details\n"
+            ."                                                             859 points will expire\n"
+            ."17999               869      77           18791              30 Nov 2026\n"
+            ."\fBPCL SBI Card    499    Fee schedule\nBPCL SBI Card Octane    1499\n";
+        Process::fake(['*pdftotext*' => Process::result(output: $text)]);
+        $card = $this->service()->extract($this->fakeFile())['card'];
+        $this->assertSame('BPCL SBI Card OCTANE', $card['card_name']);
+        $this->assertEquals(18791, $card['reward_point_balance']);
+        $this->assertEquals(391000, $card['total_limit']);
+    }
+
+    public function test_reward_zero_is_preserved_and_conflicting_balances_are_unknown(): void
+    {
+        Process::fake(['*pdftotext*' => Process::result(output: "SBI Card\nReward Points Balance: 0\n")]);
+        $this->assertEquals(0, $this->service()->extract($this->fakeFile())['card']['reward_point_balance']);
+        Process::fake(['*pdftotext*' => Process::result(output: "SBI Card\nReward Points Balance: 100\nAvailable Reward Points: 200\n")]);
+        $this->assertNull($this->service()->extract($this->fakeFile())['card']['reward_point_balance']);
+    }
+
+    public function test_fee_schedule_and_account_closing_balance_are_not_product_or_rewards(): void
+    {
+        Process::fake(['*pdftotext*' => Process::result(output: "SBI Card\nBPCL SBI Card Octane    1499\nACCOUNT SUMMARY\nClosing Balance: 1000\nReward Points earned: 869\n")]);
+        $card = $this->service()->extract($this->fakeFile())['card'];
+        $this->assertNull($card['card_name']);
+        $this->assertNull($card['reward_point_balance']);
     }
 }

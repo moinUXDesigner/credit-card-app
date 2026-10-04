@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedule): void {
+        $schedule->command('statements:cleanup-previews')->hourly();
+        $schedule->command('ai:expire-requests')->everyFiveMinutes();
         $schedule->command('reminders:send-due-dates')->dailyAt('08:00');
     })
     ->withExceptions(function (Exceptions $exceptions): void {

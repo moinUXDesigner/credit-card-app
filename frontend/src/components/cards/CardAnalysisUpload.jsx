@@ -14,9 +14,13 @@ export default function CardAnalysisUpload({ onAnalyzed }) {
     setNotice(null)
     setAnalyzing(true)
     try {
-      const result = await analyzeCard(file)
-      if (result.document_recognized) {
-        onAnalyzed(result)
+      const result = await analyzeCard(file).catch((err) => {
+        if (file.type !== 'application/pdf') throw err
+        return { document_recognized: false, card: {}, suggested_benefits: [], message: err.response?.data?.message ?? 'Card autofill was unavailable. Fill the card details manually and review the PDF.' }
+      })
+      if (result.document_recognized || file.type === 'application/pdf') {
+        setNotice(result.message ?? 'Review the extracted fields. Missing values must be entered manually.')
+        await onAnalyzed(result, file)
       } else {
         setNotice(result.message ?? "We couldn't recognize a credit card statement or card in this file.")
       }
@@ -36,7 +40,7 @@ export default function CardAnalysisUpload({ onAnalyzed }) {
           <p className="text-sm font-medium text-gray-900">Upload a statement or card photo</p>
           <p className="text-xs text-gray-500">
             We'll try to auto-fill this form from your statement PDF or a photo of your card. Anything we can't
-            read, you can fill in yourself. The file itself is never saved.
+            read, you can fill in yourself. A statement PDF can be reviewed and saved as your first statement. Card photos are used only for autofill.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">

@@ -22,8 +22,8 @@ class RecommendationEndpointTest extends TestCase
     public function test_recommendation_endpoint_returns_sorted_scores(): void
     {
         $user = User::factory()->create();
-        $lowUtil = Card::factory()->for($user)->create(['total_limit' => 100000, 'current_outstanding' => 5000]);
-        $highUtil = Card::factory()->for($user)->create(['total_limit' => 100000, 'current_outstanding' => 90000]);
+        $lowUtil = Card::factory()->for($user)->create(['total_limit' => 100000, 'current_outstanding' => 5000, 'due_day' => 15, 'waiver_spend_required' => 0, 'reward_rate_general' => 2]);
+        $highUtil = Card::factory()->for($user)->create(['total_limit' => 100000, 'current_outstanding' => 90000, 'due_day' => 15, 'waiver_spend_required' => 0, 'reward_rate_general' => 2]);
 
         $response = $this->getJson('/api/recommendation', $this->authHeaders($user))->assertStatus(200);
 

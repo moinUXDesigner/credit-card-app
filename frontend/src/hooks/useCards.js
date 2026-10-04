@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { listCards } from '../api/cards'
 
 export function useCards() {
@@ -6,24 +6,31 @@ export function useCards() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  const loaded = useRef(false)
+  const requestId = useRef(0)
+  const invalidatePending = useCallback(() => { requestId.current++ }, [])
+
   const refresh = useCallback(async () => {
-    setLoading(true)
+    const current = ++requestId.current
+    if (!loaded.current) setLoading(true)
     setError(null)
     try {
       const data = await listCards()
+      if (current !== requestId.current) return
+      loaded.current = true
       setCards(data)
     } catch (err) {
-      setError(err)
+      if (current === requestId.current) setError(err)
     } finally {
-      setLoading(false)
+      if (current === requestId.current) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     refresh()
     window.addEventListener('sync-data', refresh)
-    return () => window.removeEventListener('sync-data', refresh)
-  }, [refresh])
+    return () => { invalidatePending(); window.removeEventListener('sync-data', refresh) }
+  }, [refresh, invalidatePending])
 
   return { cards, loading, error, refresh }
 }

@@ -6,6 +6,7 @@ const BAND_COLORS = {
 }
 
 export default function UtilizationBar({ percentage, band, message }) {
+  if (percentage == null || !Number.isFinite(percentage)) return <div className="text-xs text-gray-600">Utilization · Cannot calculate without a positive credit limit.</div>
   const colors = BAND_COLORS[band] ?? BAND_COLORS.good
   const width = Math.min(100, Math.max(0, percentage))
 

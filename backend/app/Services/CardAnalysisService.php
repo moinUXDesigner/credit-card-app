@@ -17,6 +17,15 @@ class CardAnalysisService
     public function analyze(UploadedFile $file): array
     {
         $mediaType = $file->getMimeType();
+        if ($mediaType === 'application/pdf') {
+            if (request()->user()) {
+                $service = app(StatementImportService::class);
+
+                return $service->payload($service->preview($file, request()->user()->id), null);
+            }
+
+            return app(StatementTextExtractionService::class)->extract($file);
+        }
         $data = base64_encode(file_get_contents($file->getRealPath()));
 
         $fileBlock = $mediaType === 'application/pdf'
@@ -121,7 +130,17 @@ class CardAnalysisService
             card, set document_recognized to false and confidence to "none", leave every
             extractable field null, and return an empty suggested_benefits array.
 
-            Step 1 — read the document itself. Statements often print a rewards/benefits
+            Extract last_four_digits only from the labeled card number, preserving leading zeros.
+            Extract current_outstanding from total amount due/outstanding balance, never minimum
+            due, available credit, or a sum of transactions.
+
+            Step 1 — read every page of the document, including separate rewards pages.
+            Extract card_name from the actual product title in the statement masthead (for
+            example "BPCL SBI Card OCTANE"), not the cardholder name or other products
+            listed in fee schedules. For reward_point_balance use the closing/available
+            points balance, never opening balance, points earned this month, redeemed
+            points, expiring points, or a transaction reward rate.
+            Statements often print a rewards/benefits
             summary section, and card mailers/welcome kits sometimes print welcome-offer or
             benefit text directly. Extract any reward point balance, reward multiplier,
             lounge visit counts, cashback earned, or named benefits/offers you can actually
@@ -173,7 +192,7 @@ class CardAnalysisService
             'additionalProperties' => false,
             'required' => [
                 'document_recognized', 'confidence', 'card_name', 'bank_name', 'last_four_digits',
-                'network', 'total_limit', 'statement_day', 'due_day', 'annual_fee_amount',
+                'network', 'total_limit', 'current_outstanding', 'statement_day', 'due_day', 'annual_fee_amount',
                 'annual_fee_month', 'waiver_spend_required', 'reward_point_balance', 'reward_rate_general',
                 'cashback_cap_amount', 'forex_markup_percent', 'fuel_surcharge_waiver_percent',
                 'insurance_cover_amount', 'lounge_access', 'best_categories', 'suggested_benefits',
@@ -186,6 +205,7 @@ class CardAnalysisService
                 'last_four_digits' => $nullableString,
                 'network' => ['type' => ['string', 'null'], 'enum' => [...CardFieldSanitizer::VALID_NETWORKS, null]],
                 'total_limit' => $nullableNumber,
+                'current_outstanding' => $nullableNumber,
                 'statement_day' => $nullableInteger,
                 'due_day' => $nullableInteger,
                 'annual_fee_amount' => $nullableNumber,

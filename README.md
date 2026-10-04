@@ -2,7 +2,7 @@
 
 A personal credit-card management app for users who hold multiple Indian credit cards. It helps decide which card to use, tracks annual-fee waiver progress, monitors credit utilization, reminds about due/statement dates, and tracks unused card benefits (lounge access, cashback caps, reward points, etc.).
 
-This is **not** a payment app — it never stores full card numbers, CVV, PIN, OTP, or banking credentials. Only last 4 digits, network, limits, dates, fee rules, benefits, and manually-entered outstanding/spend figures are stored. It also never claims to "improve your CIBIL score" — only that it supports healthier credit card usage (utilization and payment-history awareness).
+This is **not** a payment app — it never stores full card numbers, CVV, PIN, OTP, or banking credentials. Structured card records contain only last 4 digits, network, limits, dates, fee rules, benefits, and reviewed outstanding/spend figures. Optional uploaded statement PDFs are stored privately and may contain the original document’s personal/account details. It also never claims to "improve your CIBIL score" — only that it supports healthier credit card usage (utilization and payment-history awareness).
 
 ## Stack
 
@@ -71,6 +71,8 @@ Tests run against an in-memory SQLite database (`phpunit.xml`), not MySQL, so no
 
 Additional web features: admin account operations, manual SMS/email message import with editable previews, PDF statement analysis, AI explanations of deterministic recommendations, per-card viewer/editor invitations, and offline account synchronization. Enable offline storage through Sync Center on a trusted device.
 
+Click a card to view its details, or choose **Upload statement** to open its Statements tab. Review extracted dates, balances and transactions before importing. A PDF used during Add Card can be saved as the first statement; exact reuploads do not duplicate spend. If a statement shows fewer than four ending digits, enter the full last four manually. Offline PDFs await review after synchronization.
+
 Deferred: automatic mailbox/device-SMS ingestion and Capacitor/Android packaging. This implementation is a web app only; Android will be planned later.
 
 See [deployment and feature operations](docs/DEVELOPMENT_AND_DEPLOYMENT.md) for permissions, synchronization contracts, limits, and validation commands.
@@ -79,3 +81,5 @@ See [deployment and feature operations](docs/DEVELOPMENT_AND_DEPLOYMENT.md) for 
 
 - No card number, CVV, PIN, or OTP fields exist anywhere in the schema or API — only `last_four_digits` and `network`.
 - Per-resource ownership is enforced via Laravel Policies (`CardPolicy`, `BenefitPolicy`); every resource test suite checks that one user cannot view/update/delete another user's records.
+
+AI PDF reading and the private Card Chat page are available with a server-side OpenAI key and the `ai` queue worker. PDF reading falls back to local extraction when AI is unavailable. See [setup and API details](docs/DEVELOPMENT_AND_DEPLOYMENT.md#queued-ai-statements-and-card-chat--4-october-2026) and the [implementation plan](codex-plans/ai-statements-and-card-chat.md).

@@ -176,4 +176,26 @@ class CardCrudTest extends TestCase
     {
         $this->getJson('/api/cards')->assertStatus(401);
     }
+
+    public function test_recorded_payments_persist_balance_without_changing_spend_and_reject_stale_updates(): void
+    {
+        $user = User::factory()->create();
+        $card = Card::factory()->for($user)->create([
+            'total_limit' => 100000, 'current_outstanding' => 10000,
+            'waiver_spend_completed' => 5000, 'reward_point_balance' => 850,
+        ]);
+        $headers = $this->authHeaders($user);
+        $revision = $card->revision;
+        $this->putJson("/api/cards/{$card->id}", ['current_outstanding' => 7499.50, 'revision' => $revision], $headers)
+            ->assertOk()->assertJsonPath('current_outstanding', 7499.5);
+        $card->refresh();
+        $this->assertSame('manual', $card->summary_provenance['current_outstanding']['type']);
+        $this->assertEquals(5000, $card->waiver_spend_completed);
+        $this->assertEquals(850, $card->reward_point_balance);
+        $this->putJson("/api/cards/{$card->id}", ['current_outstanding' => 0, 'revision' => $revision], $headers)->assertConflict();
+        $this->assertEquals(7499.5, $card->fresh()->current_outstanding);
+        $this->putJson("/api/cards/{$card->id}", ['current_outstanding' => 0, 'revision' => $card->revision], $headers)
+            ->assertOk()->assertJsonPath('current_outstanding', 0);
+        $this->assertEquals(0, $card->fresh()->current_outstanding);
+    }
 }

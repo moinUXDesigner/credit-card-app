@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class Card extends Model
 {
@@ -58,6 +59,7 @@ class Card extends Model
     protected function casts(): array
     {
         return [
+            'summary_provenance' => 'array',
             'total_limit' => 'decimal:2',
             'current_outstanding' => 'decimal:2',
             'annual_fee_amount' => 'decimal:2',
@@ -78,9 +80,14 @@ class Card extends Model
 
     public function permissionFor(?User $user): ?string
     {
-        if (!$user) return null;
-        if ($user->id === $this->user_id) return 'owner';
-        return \Illuminate\Support\Facades\DB::table('card_memberships')->where('card_id',$this->id)->where('user_id',$user->id)->whereNotNull('accepted_at')->value('permission');
+        if (! $user) {
+            return null;
+        }
+        if ($user->id === $this->user_id) {
+            return 'owner';
+        }
+
+        return DB::table('card_memberships')->where('card_id', $this->id)->where('user_id', $user->id)->whereNotNull('accepted_at')->value('permission');
     }
 
     public function user(): BelongsTo

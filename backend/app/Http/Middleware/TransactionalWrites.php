@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Benefit;
 use App\Models\Card;
 use App\Models\Statement;
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class TransactionalWrites
 
         try {
             return DB::transaction(function () use ($request, $next) {
+                User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
                 $card = $request->route('card');
                 $benefit = $request->route('benefit');
                 $statement = $request->route('statement');
@@ -32,7 +34,7 @@ class TransactionalWrites
                     $card = $model instanceof Card ? $model : $model->card;
                     Card::whereKey($card->id)->lockForUpdate()->firstOrFail();
                     $model->refresh();
-                    if ($request->has('revision') && (int) $request->input('revision') !== (int) $model->revision) {
+                    if (! ($request->has('preview_id') && $request->has('idempotency_key')) && $request->has('revision') && (int) $request->input('revision') !== (int) $model->revision) {
                         return response()->json(['message' => 'The record changed.', 'server' => $model, 'revision' => $model->revision], 409);
                     }
                 }

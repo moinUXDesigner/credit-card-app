@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import MarkAsPaidButton from '../components/cards/MarkAsPaidButton'
+import RecentSpends from '../components/cards/RecentSpends'
+import { useCallback, useEffect, useState, useRef } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getCard } from '../api/cards'
-import { deleteStatement } from '../api/statements'
+import { previewStatement, deleteStatement } from '../api/statements'
 import { useStatements } from '../hooks/useStatements'
+import { refreshData } from '../sync/engine'
 import Badge from '../components/common/Badge'
 import UtilizationBar from '../components/cards/UtilizationBar'
 import WaiverProgressBar from '../components/waiver/WaiverProgressBar'
@@ -22,6 +25,7 @@ function Field({ label, value }) {
 function DetailsTab({ card }) {
   return (
     <div className="space-y-6">
+      <div className="rounded-lg border bg-white p-4 shadow-sm"><RecentSpends /></div>
       <div className="rounded-lg border bg-white p-4 shadow-sm">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
           <Field label="Total limit" value={`₹${card.total_limit.toLocaleString('en-IN')}`} />
@@ -65,7 +69,7 @@ function DetailsTab({ card }) {
       <div className="rounded-lg border bg-white p-4 shadow-sm">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <UtilizationBar
-            percentage={card.utilization_percentage}
+            percentage={card.total_limit > 0 ? card.utilization_percentage : null}
             band={card.utilization_band}
             message={card.utilization_message}
           />
@@ -86,48 +90,68 @@ function DetailsTab({ card }) {
   )
 }
 
-function StatementsTab({ cardId, readOnly }) {
-  const { statements, refresh } = useStatements(cardId)
-
+function StatementsTab({ card }) {
+  const readOnly = card.permission === 'viewer'
+  const { statements, loading, error: listError, refresh } = useStatements(card.id)
+  const [review, setReview] = useState(null)
+  const [error, setError] = useState(null)
+  const [busy, setBusy] = useState(null)
+  const changed = async () => { await refreshData() }
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this statement? Its transactions and any spend they contributed will be removed.')) {
-      return
-    }
-    await deleteStatement(id)
-    refresh()
+    if (!window.confirm('Delete this statement? Its imported transactions will be removed and spend recalculated.')) return
+    setError(null)
+    try { await deleteStatement(id); await changed() }
+    catch (err) { setError(err.response?.data?.message ?? err.message) }
   }
-
-  return (
-    <div className="space-y-4">
-      {!readOnly && <StatementUploadForm cardId={cardId} onUploaded={refresh} />}
-
-      {statements.length === 0 && <p className="text-sm text-gray-500">No statements uploaded for this card yet.</p>}
-
-      <div className="space-y-3">
-        {statements.map((statement) => (
-          <StatementListItem key={statement.id} statement={statement} onDelete={handleDelete} readOnly={readOnly} />
-        ))}
-      </div>
-    </div>
-  )
+  const handleReview = async (statement) => {
+    setError(null); setBusy(statement.id)
+    try { setReview(await previewStatement(null, null, statement.id)) }
+    catch (err) { setError(err.response?.data?.message ?? err.message) }
+    finally { setBusy(null) }
+  }
+  return <div className="space-y-4">
+    {!readOnly && <StatementUploadForm key={review?.preview_id ?? 'upload'} card={card} initialPreview={review} onReviewClosed={() => setReview(null)} onUploaded={changed} />}
+    {(error || listError) && <p role="alert" className="text-sm text-red-700">{error || listError}<button className="ml-2 underline" onClick={refresh}>Retry</button></p>}
+    {loading && <p className="text-sm text-gray-500">Loading statements…</p>}
+    {!loading && !listError && statements.length === 0 && <p className="text-sm text-gray-500">No statements uploaded for this card yet.</p>}
+    <div className="space-y-3">{statements.map((statement) => <StatementListItem key={statement.id} statement={statement} onDelete={handleDelete} onReview={handleReview} onCategoryChanged={changed} reviewing={busy === statement.id} readOnly={readOnly} />)}</div>
+  </div>
 }
 
 export default function CardDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [card, setCard] = useState(null)
-  const [tab, setTab] = useState('details')
-
-  useEffect(() => {
-    const load = () => getCard(id).then(setCard).catch(() => setCard(null))
-    load()
-    window.addEventListener('sync-data', load)
-    return () => window.removeEventListener('sync-data', load)
+  const [search, setSearch] = useSearchParams()
+  const tab = search.get('tab') === 'statements' ? 'statements' : 'details'
+  const setTab = (name) => setSearch(name === 'statements' ? { tab: name } : {})
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const requestId = useRef(0)
+  const invalidatePending = useCallback(() => { requestId.current++ }, [])
+  const load = useCallback(async () => {
+    const current = ++requestId.current
+    setLoading(true); setError(null)
+    try {
+      const data = await getCard(id)
+      if (current === requestId.current) setCard(data)
+    } catch (err) {
+      if (current !== requestId.current) return
+      if ([403, 404].includes(err.response?.status)) setCard(null)
+      setError([403, 404].includes(err.response?.status) ? 'This card is unavailable or you no longer have access.' : 'Could not refresh this card. Please retry.')
+    } finally { if (current === requestId.current) setLoading(false) }
   }, [id])
 
-  if (!card) {
-    return <p className="text-sm text-gray-500">Loading…</p>
-  }
+  useEffect(() => {
+    setCard(null)
+    load()
+    window.addEventListener('sync-data', load)
+    return () => { invalidatePending(); window.removeEventListener('sync-data', load) }
+  }, [load, invalidatePending])
+
+  if (loading && !card) return <p className="text-sm text-gray-500">Loading…</p>
+  if (error && !card) return <div role="alert"><p>{error}</p><button onClick={load} className="mt-2 text-indigo-600">Retry</button><Link to="/cards" className="ml-4 text-indigo-600">Back to My Cards</Link></div>
+  if (!card) return null
 
   const tabClass = (name) =>
     `border-b-2 px-1 pb-2 text-sm font-medium ${
@@ -136,6 +160,7 @@ export default function CardDetailPage() {
 
   return (
     <div className="space-y-4">
+      {error && <p role="alert" className="text-sm text-red-700">{error}<button onClick={load} className="ml-2 underline">Retry</button></p>}
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div>
           <button onClick={() => navigate('/cards')} className="text-sm text-indigo-600 hover:underline">
@@ -149,9 +174,9 @@ export default function CardDetailPage() {
             <span className="text-sm text-gray-500">•••• {card.last_four_digits}</span>
           </div>
         </div>
-        {card.permission !== 'viewer' && <Link to={`/cards/${card.id}/edit`} className="rounded border px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50">
+        {card.permission !== 'viewer' && <div className="flex flex-wrap items-center gap-3"><MarkAsPaidButton card={card} /><Link to={`/cards/${card.id}?tab=statements`} className="rounded border px-3 py-2 text-sm text-indigo-600">Upload statement</Link><Link to={`/cards/${card.id}/edit`} className="rounded border px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50">
           Edit card
-        </Link>}
+        </Link></div>}
       </div>
 
       <div className="flex gap-6 border-b">
@@ -163,7 +188,7 @@ export default function CardDetailPage() {
         </button>
       </div>
 
-      {tab === 'details' ? <DetailsTab card={card} /> : <StatementsTab cardId={card.id} readOnly={card.permission === 'viewer'} />}
+      {tab === 'details' ? <DetailsTab card={card} /> : <StatementsTab card={card} />}
     </div>
   )
 }

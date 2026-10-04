@@ -51,7 +51,9 @@ test.beforeEach(async ({ page }) => {
   })))
   // Use deterministic local fixtures; these layout tests do not modify backend accounts.
   await page.route('**/api/**', async (route) => {
-    const path = new URL(route.request().url()).pathname.replace(/^\/api/, '')
+    const pathname = new URL(route.request().url()).pathname
+    if (!pathname.startsWith('/api/')) return route.continue()
+    const path = pathname.replace(/^\/api/, '')
     let data
     if (path === '/cards') data = cards
     else if (path === '/cards/1') data = card

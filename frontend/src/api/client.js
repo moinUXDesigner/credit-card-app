@@ -6,12 +6,13 @@ import { useAuthStore } from '../store/authStore'
 const networkAdapter = axios.getAdapter(axios.defaults.adapter)
 const client = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL, adapter: async (config) => {
  const path=config.url.split('?')[0], method=(config.method??'GET').toUpperCase(), id=useAuthStore.getState().user?.id
+ const privateRemote = path.startsWith('/chat/') || path.startsWith('/ai/')
  const account=id?await readAccount(id).catch(()=>null):null
  if(account?.enabled && supported(method,path)) {
-  const data=await enqueue(method,path,config.data)
+  const data=await enqueue(method,path,config.data,config.retainedStatementFile)
   return {data,status:202,statusText:'Queued',headers:{},config,request:null}
  }
- if(method==='GET' && account?.enabled && (!navigator.onLine || account.queue.length)) {
+ if(method==='GET' && !privateRemote && !path.startsWith('/statement-previews') && account?.enabled && (!navigator.onLine || account.queue.length)) {
   const cached=await cachedRead(path,config.params)
   if(cached!==undefined)return {data:cached,status:200,statusText:'Offline cache',headers:{},config,request:null}
  }
@@ -19,10 +20,10 @@ const client = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL, adapte
  try {
   const response=await networkAdapter(config)
   // Axios transforms JSON after the adapter returns; parse it before caching.
-  if(method==='GET') { let data=response.data; if(typeof data==='string'){try{data=JSON.parse(data)}catch{/* Non-JSON response such as a downloaded PDF. */}} await cacheResponse(path,config.params,data) }
+  if(method==='GET' && !privateRemote && !path.startsWith('/statement-previews')) { let data=response.data; if(typeof data==='string'){try{data=JSON.parse(data)}catch{/* Non-JSON response such as a downloaded PDF. */}} await cacheResponse(path,config.params,data) }
   return response
  } catch(error) {
-  if(!error.response && method==='GET'){const cached=await cachedRead(path,config.params);if(cached!==undefined)return {data:cached,status:200,statusText:'Cached',headers:{},config,request:null}}
+  if(!privateRemote && !error.response && method==='GET'){const cached=await cachedRead(path,config.params);if(cached!==undefined)return {data:cached,status:200,statusText:'Cached',headers:{},config,request:null}}
   throw error
  }
 } })

@@ -18,6 +18,26 @@ services:
     networks:
       - ccapp-net
 
+  worker:
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    command: php artisan queue:work database --queue=ai --sleep=2 --timeout=300 --tries=1
+    restart: unless-stopped
+    volumes:
+      - ./backend:/var/www/html
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-credit_card_app}
+      - DB_USERNAME=${DB_USERNAME:-ccapp}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - ccapp-net
+
   nginx:
     image: nginx:1.27-alpine
     container_name: ccapp-nginx

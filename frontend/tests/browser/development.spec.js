@@ -96,9 +96,9 @@ test('offline card, benefit and spend survive reload and replay in dependency or
     amount_spent: 400,
   })
   await page.goto('/cards')
-  await expect(page.getByText('Browser test card', { exact: false })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'View Test Bank Browser test card', exact: true })).toBeVisible()
   await page.reload()
-  await expect(page.getByText('Browser test card', { exact: false })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'View Test Bank Browser test card', exact: true })).toBeVisible()
   await expect(page.getByText('Pending sync')).toBeVisible()
   await context.setOffline(false)
   await page.evaluate(async () => {
@@ -364,7 +364,7 @@ test('production UI creates a card offline and reloads before syncing', async ({
   await page.getByRole('button', { name: 'Add card', exact: true }).click()
   await expect(page).toHaveURL(/\/cards$/)
   await page.reload()
-  await expect(page.getByText('Production offline card', { exact: false })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'View Test Bank Production offline card', exact: true })).toBeVisible()
   await expect(page.getByText('Pending sync')).toBeVisible()
   await context.setOffline(false)
   await page.getByRole('link', { name: 'Sync Center', exact: true }).first().click()

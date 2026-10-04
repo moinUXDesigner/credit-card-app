@@ -41,7 +41,8 @@ class CardFieldSanitizer
             'bank_name' => $data['bank_name'] ?? null,
             'last_four_digits' => $lastFour,
             'network' => $network,
-            'total_limit' => $data['total_limit'] ?? null,
+            'total_limit' => $this->money($data['total_limit'] ?? null),
+            'current_outstanding' => $this->money($data['current_outstanding'] ?? null),
             'statement_day' => $statementDay,
             'due_day' => $dueDay,
             'annual_fee_amount' => $data['annual_fee_amount'] ?? null,
@@ -67,6 +68,11 @@ class CardFieldSanitizer
                 && in_array($b['frequency'] ?? null, self::VALID_BENEFIT_FREQUENCIES, true)
                 && ! empty($b['title'])
         ));
+    }
+
+    private function money(mixed $value): ?float
+    {
+        return is_numeric($value) && is_finite((float) $value) && $value >= 0 ? (float) $value : null;
     }
 
     private function validRange(mixed $value, int $min, int $max): ?int

@@ -10,6 +10,7 @@ import logoutAnimation from '../../assets/lottie/logout.json'
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard' },
   { to: '/cards', label: 'My Cards' },
+  { to: '/chat', label: 'Card Chat' },
   { to: '/recommendation', label: 'Recommendation' },
   { to: '/benefits', label: 'Benefits' },
   { to: '/calendar', label: 'Calendar' },

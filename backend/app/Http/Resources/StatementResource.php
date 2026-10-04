@@ -11,6 +11,9 @@ class StatementResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'preview_id' => $this->preview_id,
+            'extracted_summary' => $this->extracted_summary,
+            'requires_review' => $this->analysis_status === 'pending',
             'revision' => $this->revision,
             'card_id' => $this->card_id,
             'original_filename' => $this->original_filename,

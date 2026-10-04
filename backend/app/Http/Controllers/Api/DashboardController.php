@@ -55,6 +55,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'overall_utilization' => [
+                'calculable' => $cards->sum('total_limit') > 0,
                 'percentage' => $overallPct,
                 'band' => $this->utilizationService->band($overallPct),
             ],

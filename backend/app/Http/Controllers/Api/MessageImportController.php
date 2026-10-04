@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Card;
 use App\Services\MessageParser;
 use App\Services\SpendAggregationService;
+use App\Services\StatementImportService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -66,13 +67,14 @@ class MessageImportController extends Controller
             if ($d['apply_summary']) {
                 $summary = json_decode($preview->summary, true);
                 if ($summary) {
-                    $card->update($summary);
+                    app(StatementImportService::class)->markExternal($card, $summary, 'message');
+                    $card->fill($summary)->save();
                 }
             }
             app(SpendAggregationService::class)->recompute($card, array_values($periods));
             DB::table('message_imports')->insert(['card_id' => $card->id, 'fingerprint' => $preview->fingerprint, 'created_at' => now(), 'updated_at' => now()]);
 
-            return response()->json(['imported' => $count, 'duplicate' => false],201);
+            return response()->json(['imported' => $count, 'duplicate' => false], 201);
         });
     }
 }

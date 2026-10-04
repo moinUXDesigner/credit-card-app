@@ -17,6 +17,7 @@ class Statement extends Model
     ];
 
     protected $fillable = [
+        'fingerprint', 'preview_id', 'extracted_summary', 'summary_previous',
         'file_path',
         'original_filename',
         'billing_month',
@@ -32,6 +33,7 @@ class Statement extends Model
     protected function casts(): array
     {
         return [
+            'extracted_summary' => 'array', 'summary_previous' => 'array',
             'statement_date' => 'date',
             'due_date' => 'date',
             'total_due' => 'decimal:2',

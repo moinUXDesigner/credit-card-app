@@ -132,12 +132,15 @@ function optimistic(account, op) {
         ...item,
         remaining: Number(payload.total_allowed) - Number(payload.used_count ?? 0),
       }
-    if (type === 'statements')
+    if (type === 'statements' && payload.preview_id) {
+      const staged = list.find((s) => s.preview_id === payload.preview_id)
+      item = { ...staged, ...item, id: staged?.id ?? id, original_filename: staged?.original_filename ?? (op.filename || 'Reviewed statement import'), analysis_status: 'queued', analysis_message: 'Reviewed import queued for sync.', total_due: payload.summary?.total_due ?? null, transactions: [] }
+    } else if (type === 'statements')
       item = {
         ...item,
         original_filename: op.filename,
         analysis_status: 'queued',
-        analysis_message: 'Waiting for sync; no extraction has been performed.',
+        analysis_message: 'Awaiting analysis/review after sync. No balances or spend have been changed.',
         total_due: null,
         minimum_due: null,
         transactions: [],
@@ -308,7 +311,7 @@ export async function enableOffline() {
   await navigator.storage?.persist?.()
   announce()
 }
-export async function enqueue(method, path, data) {
+export async function enqueue(method, path, data, retainedFile) {
   const id = currentId()
   if (!id) throw new Error('Log in first.')
   let payload = {},
@@ -322,6 +325,7 @@ export async function enqueue(method, path, data) {
       } else payload[key] = value
     }
   } else payload = typeof data === 'string' ? JSON.parse(data) : (data ?? {})
+  if (retainedFile instanceof Blob) { file = retainedFile; filename = retainedFile.name ?? 'statement.pdf' }
   const op = {
     operation_id: crypto.randomUUID(),
     method,
@@ -559,4 +563,16 @@ export function startSync() {
     if (state.user?.id !== previous.user?.id && state.token) void flush().catch(() => {})
   })
   if (navigator.onLine) void flush().catch(() => {})
+}
+
+export async function refreshData() {
+  if (navigator.onLine) await flush().catch(() => {})
+  announce()
+}
+
+export async function resolveCardId(cardId) {
+  const id = currentId()
+  if (!id) return cardId
+  const account = await readAccount(id)
+  return account.mappings[cardId] ?? cardId
 }

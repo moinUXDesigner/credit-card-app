@@ -38,6 +38,9 @@ return [
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'model' => env('OPENAI_MODEL', 'gpt-4o'),
+        'pdf_model' => env('OPENAI_PDF_MODEL', env('OPENAI_MODEL', 'gpt-4o')),
+        'chat_model' => env('OPENAI_CHAT_MODEL', env('OPENAI_MODEL', 'gpt-4o')),
+        'issuer_domains' => ['sbi' => ['sbicard.com'], 'icici' => ['icicibank.com'], 'hdfc' => ['hdfcbank.com', 'hdfc.bank'], 'axis' => ['axisbank.com'], 'yes' => ['yesbank.in'], 'kotak' => ['kotak.com'], 'idfc' => ['idfcfirstbank.com'], 'american express' => ['americanexpress.com']],
     ],
 
 ];

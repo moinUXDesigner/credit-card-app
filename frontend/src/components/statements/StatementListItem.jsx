@@ -1,3 +1,4 @@
+import StatementTransactions from './StatementTransactions'
 import { useState } from 'react'
 import Badge from '../common/Badge'
 import Offcanvas from '../common/Offcanvas'
@@ -10,19 +11,21 @@ const MONTH_NAMES = [
 
 const STATUS_COLOR = { completed: 'green', pending: 'yellow', failed: 'red' }
 
-export default function StatementListItem({ statement, onDelete, readOnly }) {
+export default function StatementListItem({ statement, onDelete, onReview, reviewing, readOnly, onCategoryChanged }) {
   const [expanded, setExpanded] = useState(false)
   const [pdfUrl, setPdfUrl] = useState(null)
   const [viewerOpen, setViewerOpen] = useState(false)
+  const [error, setError] = useState(null)
   const [viewLoading, setViewLoading] = useState(false)
 
   const openViewer = async () => {
+    setError(null)
     setViewerOpen(true)
     setViewLoading(true)
     try {
       const url = await getStatementViewUrl(statement.id)
       setPdfUrl(url)
-    } finally {
+    } catch (err) { setError(err.response?.data?.message ?? 'Could not open this PDF.'); setViewerOpen(false) } finally {
       setViewLoading(false)
     }
   }
@@ -52,6 +55,7 @@ export default function StatementListItem({ statement, onDelete, readOnly }) {
           {statement.analysis_message && <p className="mt-1 text-xs text-amber-700">{statement.analysis_message}</p>}
         </div>
         <div className="flex shrink-0 flex-wrap gap-x-3 gap-y-2 text-sm">
+          {!readOnly && ['pending', 'failed'].includes(statement.analysis_status) && <button disabled={statement.pending || reviewing || !navigator.onLine} onClick={() => onReview(statement)} className="text-indigo-600 hover:underline">{reviewing ? 'Analyzing…' : 'Review statement'}</button>}
           {statement.transactions.length > 0 && (
             <button onClick={() => setExpanded((v) => !v)} className="text-indigo-600 hover:underline">
               {expanded ? 'Hide' : `${statement.transactions.length} transactions`}
@@ -62,7 +66,7 @@ export default function StatementListItem({ statement, onDelete, readOnly }) {
           </button>
           <button
             disabled={statement.pending}
-            onClick={() => downloadStatement(statement.id, statement.original_filename)}
+            onClick={() => downloadStatement(statement.id, statement.original_filename).catch(() => setError('Could not download this PDF.'))}
             className="text-indigo-600 hover:underline"
           >
             Download
@@ -73,21 +77,8 @@ export default function StatementListItem({ statement, onDelete, readOnly }) {
         </div>
       </div>
 
-      {expanded && (
-        <div className="mt-3 space-y-1 border-t pt-3">
-          {statement.transactions.map((t) => (
-            <div key={t.id} className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center text-sm">
-              <span className="text-gray-700">
-                {t.transaction_date} · {t.description}
-              </span>
-              <span className="flex flex-wrap items-center gap-2">
-                {t.category && <Badge color="indigo">{t.category}</Badge>}
-                <span className="text-gray-900">₹{t.amount.toLocaleString('en-IN')}</span>
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
+      {expanded && <StatementTransactions statement={statement} readOnly={readOnly} onChanged={onCategoryChanged} />}
 
       <Offcanvas open={viewerOpen} onClose={closeViewer} title={statement.original_filename}>
         {viewLoading && <p className="p-4 text-sm text-gray-600">Loading statement…</p>}

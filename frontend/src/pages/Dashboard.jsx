@@ -65,7 +65,7 @@ export default function Dashboard() {
 
       <div className="rounded-lg border bg-white p-4 shadow-sm">
         <h2 className="mb-2 text-sm font-semibold text-gray-900">Overall utilization</h2>
-        <UtilizationBar percentage={data.overall_utilization.percentage} band={data.overall_utilization.band} />
+        <UtilizationBar percentage={data.overall_utilization.calculable === false ? null : data.overall_utilization.percentage} band={data.overall_utilization.band} />
       </div>
 
       <div className="rounded-lg border bg-white p-4 shadow-sm">

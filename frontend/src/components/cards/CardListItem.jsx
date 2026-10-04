@@ -1,3 +1,5 @@
+import MarkAsPaidButton from './MarkAsPaidButton'
+import RecentSpends from './RecentSpends'
 import { Link } from 'react-router-dom'
 import Badge from '../common/Badge'
 import UtilizationBar from './UtilizationBar'
@@ -5,9 +7,9 @@ import WaiverProgressBar from '../waiver/WaiverProgressBar'
 
 export default function CardListItem({ card, onDelete }) {
   return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm">
+    <div className="relative rounded-lg border bg-white p-4 shadow-sm">
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-        <Link to={`/cards/${card.id}`} className="block min-w-0 hover:opacity-80">
+        <Link to={`/cards/${card.id}`} aria-label={`View ${card.bank_name} ${card.card_name}`} className="block min-w-0 after:absolute after:inset-0 after:rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-medium text-gray-900">
               {card.bank_name} {card.card_name}
@@ -28,7 +30,9 @@ export default function CardListItem({ card, onDelete }) {
             </p>
           )}
         </Link>
-        <div className="flex shrink-0 flex-wrap gap-3 text-sm">
+        <div className="relative z-10 flex shrink-0 flex-wrap items-center gap-3 text-sm">
+          <MarkAsPaidButton card={card} />
+          {card.permission !== 'viewer' && <Link to={`/cards/${card.id}?tab=statements`} className="text-indigo-600 hover:underline">Upload statement</Link>}
           {card.permission !== 'viewer' && <Link to={`/cards/${card.id}/edit`} className="text-indigo-600 hover:underline">
             Edit
           </Link>}
@@ -40,7 +44,7 @@ export default function CardListItem({ card, onDelete }) {
 
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <UtilizationBar
-          percentage={card.utilization_percentage}
+          percentage={card.total_limit > 0 ? card.utilization_percentage : null}
           band={card.utilization_band}
           message={card.utilization_message}
         />
@@ -52,6 +56,7 @@ export default function CardListItem({ card, onDelete }) {
           suggestedMonthlySpend={card.waiver_suggested_monthly_spend}
         />
       </div>
+      <RecentSpends />
     </div>
   )
 }

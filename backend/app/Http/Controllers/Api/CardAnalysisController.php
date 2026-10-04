@@ -20,6 +20,6 @@ class CardAnalysisController extends Controller
             return response()->json(['message' => $e->getMessage()], 503);
         }
 
-        return response()->json($result);
+        return response()->json($result, ($result['status'] ?? '') === 'processing' ? 202 : 200);
     }
 }
